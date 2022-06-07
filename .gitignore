@@ -1,0 +1,8 @@
+# recursevely ignore
+*~
+*.swp
+*.cdslck
+*.cdslck.*
+*.~lock.*
+layout.oa.*.oacache
+
