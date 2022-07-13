@@ -6,5 +6,3 @@ setenv MTI_VCO_MODE 64
 setenv XILINX_VIVADO "/softs/xilinx/vivado/2020.2_lin64/"
 setenv PATH "$XILINX_VIVADO/bin:/edadk_repo/softs/xilinx/DocNav:$PATH"
 setenv XILINXD_LICENSE_FILE 2100@ielsrv01.epfl.ch
-
-conda activate core-v-mini-mcu

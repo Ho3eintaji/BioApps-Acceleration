@@ -2,7 +2,30 @@ Minimal configuration of a core-v-mcu
 
 ## Prerequisite
 
+0. Only if you are running on eslsrv
+
+
+On BASH shell:
+
+```
+scl enable devtoolset-10 bash
+source env.sh
+```
+
+On TCSH shell:
+
+```
+scl enable devtoolset-10 tcsh
+source env.csh
+```
+
 1. You should do all the prerequisite explained in [x-heep](https://github.com/esl-epfl/x-heep)
+
+Don't forget to activate the conda enviroment
+
+```
+$ conda activate core-v-mini-mcu
+```
 
 ## Compiling Software
 
