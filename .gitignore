@@ -5,4 +5,9 @@
 *.cdslck.*
 *.~lock.*
 layout.oa.*.oacache
-
+*.log
+build/
+*.so
+*.hex
+*.elf
+*.dis
