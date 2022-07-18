@@ -65,7 +65,7 @@ $ ./Vheepocrates_testharness +firmware=../../../sw/applications/hello_blade/hell
 
 ### Compiling for Questasim
 
-To simulate your application with Questasim, first set the env variable `MODEL_TECH` to your Questasim bin folder, then compile the HDL:
+To simulate your application with Questasim compile the HDL:
 
 ```
 $ fusesoc --cores-root . run --no-export --target=sim --tool=modelsim --setup --build eslepfl::heepocrates 2>&1 | tee buildsim.log

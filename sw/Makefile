@@ -33,7 +33,11 @@ LIB_DRIVERS                = $(wildcard x_heep_device/lib/drivers/soc_ctrl/*.c)
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/uart/*.c)
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/rv_plic/*.c)
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/rv_timer/*.c)
-
+LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/gpio/*.c)
+INC_FOLDERS                 = $(sort $(dir $(wildcard x_heep_device/lib/drivers/*/)))
+INC_FOLDERS                += $(sort $(dir $(wildcard x_heep_device/lib/base/*/)))
+INC_FOLDERS                += $(sort $(dir $(wildcard x_heep_device/lib/runtime/*/)))
+INC_FOLDERS_GCC             = $(addprefix -I ,$(INC_FOLDERS))
 
 # rules to generate hex (loadable by simulators) from elf
 %.hex: %.elf
@@ -55,15 +59,13 @@ applications/hello_blade/hello_blade.elf: applications/hello_blade/hello_blade.c
 		$(CUSTOM_GCC_FLAGS) \
 		-DHOST_BUILD \
 		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
 		-static \
 		$(LIB_CRT) \
-		$^ \
-		$(LIB_RUNTIME) \
+		$^ $(LIB_RUNTIME) \
 		$(LIB_BASE) \
 		$(LIB_DRIVERS) \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		-I x_heep_device/lib/ \
-		-I x_heep_device/lib/runtime \
 		-L $(RISCV)/riscv32-unknown-elf/lib \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 clean:
