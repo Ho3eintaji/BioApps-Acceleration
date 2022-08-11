@@ -143,4 +143,8 @@ clean:
 	rm -rf applications/*/*.elf \
 	rm -rf applications/*/*.hex \
 	rm -rf applications/*/*.dis \
-	rm -rf applications/*/*.dump
+	rm -rf applications/*/*.dump \
+	rm -rf x_applications/*/*.elf \
+	rm -rf x_applications/*/*.hex \
+	rm -rf x_applications/*/*.dis \
+	rm -rf x_applications/*/*.dump
