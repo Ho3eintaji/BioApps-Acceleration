@@ -3,11 +3,10 @@
 #include "conv.h"
 #include "blade_basic_op.h"
 
-void __attribute__((noinline)) data_placement (int* ptr_blade, short image [1024], short filter [6][25])
+void __attribute__((noinline)) filter_placement (int* ptr_blade, short filter [6][25])
 {
 	for (int sa = 0 ; sa < 14 ; sa++)
 	{
-		// writing filters
 		for (int i = 0 ; i < 25 ; i++)
 		{
 			write_16bits ((short*) ptr_blade, i, 1, sa, filter [0][i]) ;
@@ -17,7 +16,14 @@ void __attribute__((noinline)) data_placement (int* ptr_blade, short image [1024
 			write_16bits ((short*) ptr_blade, i + 64, 1, sa, filter [4][i]) ;
 			write_16bits ((short*) ptr_blade, i + 64, 0, sa, filter [5][i]) ;
 		}
-		// writing input data
+	}
+}
+
+
+void __attribute__((noinline)) input_placement (int* ptr_blade, short image [1024])
+{
+	for (int sa = 0 ; sa < 14 ; sa++)
+	{
 		for (int i = 0 ; i < 8 ; i++)
 		{
 			for (int j = 0 ; j < 18 ; j++)
@@ -42,7 +48,7 @@ void __attribute__((noinline)) convolution (int* ptr_blade)
 	int reset2 = 256 ;
 	
 	// Set the accumulation and reset addresses
-	for (int sa = 0 ; sa < 16 ; sa++)
+	for (int sa = 0 ; sa < 14 ; sa++)
 	{
 		write_32bits (ptr_blade, reset1, sa, 0) ;
 		write_32bits (ptr_blade, reset2, sa, 0) ;
