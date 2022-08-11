@@ -26,6 +26,7 @@ RISCV_EXE_PREFIX         = $(RISCV)/bin/riscv32-unknown-elf-
 CUSTOM_GCC_FLAGS           =
 
 LIB_CRT                    = $(wildcard x_heep_device/lib/crt/*.S)
+LIB_CRT_SPIFLASH           = $(wildcard x_heep_device/lib/crt_spiflash/*.S)
 LIB_BASE                   = $(wildcard x_heep_device/lib/base/*.c)
 LIB_BASE_FREESTD           = x_heep_device/lib/base/freestanding
 LIB_RUNTIME                = $(wildcard x_heep_device/lib/runtime/*.c)
@@ -34,6 +35,7 @@ LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/uart/*.c)
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/rv_plic/*.c)
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/rv_timer/*.c)
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/gpio/*.c)
+LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/i2c/*.c)
 INC_FOLDERS                 = $(sort $(dir $(wildcard x_heep_device/lib/drivers/*/)))
 INC_FOLDERS                += $(sort $(dir $(wildcard x_heep_device/lib/base/*/)))
 INC_FOLDERS                += $(sort $(dir $(wildcard x_heep_device/lib/runtime/*/)))
