@@ -41,46 +41,27 @@ This will create the executable file to be loaded in your target system (ASIC, F
 
 ## Simulating
 
-This project supports simulation with Verilator, and Siemens Questasim.
-
-### Compiling for Verilator
-
-To simulate your application with Verilator, first compile the HDL:
-
-```
-$ fusesoc --cores-root . run --no-export --target=sim --tool=verilator --setup --build eslepfl::heepocrates | tee buildsim.log
-```
-
-then, go to your target system built folder
-
-```
-$ cd ./build/eslepfl__heepocrates_0/sim-verilator
-```
-
-and type to run your compiled software:
-
-```
-$ ./Vheepocrates_testharness +firmware=../../../sw/applications/hello_blade/hello_blade.hex
-```
+This project supports simulation only with Questasim as tapeouts should be signed-off with commercial EDA tools.
+This way the developers are forced to used Questasim to validate their changes.
 
 ### Compiling for Questasim
 
 To simulate your application with Questasim compile the HDL:
 
 ```
-$ fusesoc --cores-root . run --no-export --target=sim --tool=modelsim --setup --build eslepfl::heepocrates 2>&1 | tee buildsim.log
+make questasim-sim
 ```
 
 then, go to your target system built folder
 
 ```
-$ cd ./build/eslepfl__heepocrates_0/sim-modelsim/
+cd ./build/eslepfl__heepocrates_0/sim-modelsim/
 ```
 
 and type to run your compiled software:
 
 ```
-$ make run PLUSARGS="c firmware=../../../sw/applications/hello_blade/hello_blade.hex"
+make run PLUSARGS="c firmware=../../../sw/applications/hello_blade/hello_blade.hex"
 ```
 
 ### UART DPI
