@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "heepocrates.h"
 #include "core_v_mini_mcu.h"
 
 int main(int argc, char *argv[])
@@ -25,7 +26,7 @@ int main(int argc, char *argv[])
     //should be replaced with Blade library
     int blade_wvalue = 0xDA41DE;
     int blade_rvalue = 0;
-    volatile unsigned int* blade_ptr =  (unsigned int*)EXT_SLAVE_START_ADDRESS;
+    volatile unsigned int* blade_ptr =  (unsigned int*)BLADE_START_ADDRESS;
 
     /* write something to stdout */
     printf("writing %x to blade!\n", blade_wvalue);

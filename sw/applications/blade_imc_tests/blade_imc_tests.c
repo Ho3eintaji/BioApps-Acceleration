@@ -1,14 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "heepocrates.h"
 #include "core_v_mini_mcu.h"
 
 #include "./blade_basic_op.h"
 
 
 int main ()
-{	
-	volatile int* ptr_blade = (int*) EXT_SLAVE_START_ADDRESS ;
+{
+	volatile int* ptr_blade = (int*) BLADE_START_ADDRESS ;
 	int err = 0 ;
+
 	volatile int result0 = 0 ;
 	volatile int result1 = 0 ;
 	volatile int result2 = 0 ;

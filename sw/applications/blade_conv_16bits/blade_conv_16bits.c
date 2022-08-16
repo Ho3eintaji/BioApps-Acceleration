@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "heepocrates.h"
 #include "core_v_mini_mcu.h"
 
 #include "./image.h"
@@ -15,8 +17,8 @@
 short result_filter [6][28][28] ;
 
 int main ()
-{	
-	volatile int* ptr_blade = (int*) EXT_SLAVE_START_ADDRESS ;
+{
+	volatile int* ptr_blade = (int*) BLADE_START_ADDRESS ;
 	unsigned int cycles, cycles1, cycles2 ;
 	int err = 0 ;
 	
