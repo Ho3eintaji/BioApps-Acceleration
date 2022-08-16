@@ -38,10 +38,13 @@ LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/rv_plic/*.c)
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/rv_timer/*.c)
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/gpio/*.c)
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/i2c/*.c)
+LIB_DRIVERS                += $(wildcard device/lib/drivers/cgra/*.c)
 INC_FOLDERS                = $(sort $(dir $(wildcard x_heep_device/target/$(TARGET)/)))
 INC_FOLDERS                += $(sort $(dir $(wildcard x_heep_device/lib/drivers/*/)))
 INC_FOLDERS                += $(sort $(dir $(wildcard x_heep_device/lib/base/)))
-INC_FOLDERS                += $(sort $(dir $(wildcard x_heep_device/lib/runtime/*/)))
+INC_FOLDERS                += $(sort $(dir $(wildcard x_heep_device/lib/runtime/)))
+INC_FOLDERS                += $(sort $(dir $(wildcard device/lib/drivers/*/)))
+INC_FOLDERS                += $(sort $(dir $(wildcard device/lib/runtime/)))
 INC_FOLDERS_GCC             = $(addprefix -I ,$(INC_FOLDERS))
 
 # rules to generate hex (loadable by simulators) from elf
@@ -62,6 +65,21 @@ INC_FOLDERS_GCC             = $(addprefix -I ,$(INC_FOLDERS))
 # This is an example for running a Hello World in the testbench
 # We link with our custom crt0.s and syscalls.c against newlib so that we can
 # use the c standard library
+x_applications/hello_world/hello_world.elf: x_applications/hello_world/hello_world.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
 x_applications/hello_world/hello_world.flash.elf: x_applications/hello_world/hello_world.c
 	$(RISCV_EXE_PREFIX)gcc -march=rv32im -o $@ -w -Os -g -nostdlib \
 		$(CUSTOM_GCC_FLAGS) \
@@ -76,7 +94,6 @@ x_applications/hello_world/hello_world.flash.elf: x_applications/hello_world/hel
 		$(LIB_DRIVERS) \
 		-L $(RISCV)/riscv32-unknown-elf/lib \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
 
 applications/hello_blade/hello_blade.elf: applications/hello_blade/hello_blade.c
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
@@ -136,6 +153,21 @@ applications/blade_imc_tests/blade_imc_tests.elf: applications/blade_imc_tests/b
 		-static \
 		$(LIB_CRT) \
 		applications/blade_imc_tests/blade_basic_op.c \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+applications/hello_cgra/hello_cgra.elf: applications/hello_cgra/hello_cgra.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT) \
 		$^ $(LIB_RUNTIME) \
 		$(LIB_BASE) \
 		$(LIB_DRIVERS) \
