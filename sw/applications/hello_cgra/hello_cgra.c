@@ -24,6 +24,7 @@
 #include "core_v_mini_mcu.h"
 #include "rv_plic.h"
 #include "rv_plic_regs.h"
+#include "heepocrates.h"
 #include "cgra.h"
 
 #include "stimuli.h"
@@ -88,7 +89,7 @@ int main(void) {
   cgra_intr_flag = 0;
 
   cgra_t cgra;
-  cgra.base_addr = mmio_region_from_addr((uintptr_t)EXT_PERIPHERAL_START_ADDRESS);
+  cgra.base_addr = mmio_region_from_addr((uintptr_t)CGRA_PERIPH_START_ADDRESS);
 
   int32_t kernel_res[4]    = {0, 0, 0, 0};
   int32_t cgra_res[4]      = {0, 0, 0, 0};
