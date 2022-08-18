@@ -89,26 +89,33 @@ def main():
 
     xbar_nmasters = obj['ext_xbar_masters']
 
-    ext_slave_start_address = string2int(obj['ext_xbar_slaves']['address'])
-    ext_slave_size_address = string2int(obj['ext_xbar_slaves']['length'])
     xbar_nsalves = obj['ext_xbar_slaves']['nslaves']
 
-    blade_start_offset  = string2int(obj['ext_xbar_slaves']['blade']['offset'])
+    blade_start_address  = string2int(obj['ext_xbar_slaves']['blade']['offset'])
     blade_size_address  = string2int(obj['ext_xbar_slaves']['blade']['length'])
 
-    cgra_start_offset  = string2int(obj['ext_xbar_slaves']['cgra']['offset'])
+    cgra_start_address  = string2int(obj['ext_xbar_slaves']['cgra']['offset'])
     cgra_size_address  = string2int(obj['ext_xbar_slaves']['cgra']['length'])
 
-    blade_start_address = int(ext_slave_start_address)+int(blade_start_offset)
-    cgra_start_address  = int(ext_slave_start_address)+int(cgra_start_offset)
+    cgra_periph_start_address  = string2int(obj['ext_periph']['cgra_periph']['offset'])
+    cgra_periph_size_address   = string2int(obj['ext_periph']['cgra_periph']['length'])
+
+    fll_start_address  = string2int(obj['ext_periph']['fll']['offset'])
+    fll_size_address   = string2int(obj['ext_periph']['fll']['length'])
+
+
 
     kwargs = {
-        "xbar_nmasters"           : xbar_nmasters,
-        "xbar_nsalves"            : xbar_nsalves,
-        "blade_start_address"     : blade_start_address,
-        "blade_size_address"      : blade_size_address,
-        "cgra_start_address"      : cgra_start_address,
-        "cgra_size_address"       : cgra_size_address,
+        "xbar_nmasters"             : xbar_nmasters,
+        "xbar_nsalves"              : xbar_nsalves,
+        "blade_start_address"       : blade_start_address,
+        "blade_size_address"        : blade_size_address,
+        "cgra_start_address"        : cgra_start_address,
+        "cgra_size_address"         : cgra_size_address,
+        "cgra_periph_start_address" : cgra_periph_start_address,
+        "cgra_periph_size_address"  : cgra_periph_size_address,
+        "fll_start_address"         : fll_start_address,
+        "fll_size_address"          : fll_size_address,
     }
 
     ###########
