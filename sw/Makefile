@@ -38,6 +38,8 @@ LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/rv_plic/*.c)
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/rv_timer/*.c)
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/gpio/*.c)
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/i2c/*.c)
+LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/dma/*.c)
+LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/power_manager/*.c)
 LIB_DRIVERS                += $(wildcard device/lib/drivers/cgra/*.c)
 INC_FOLDERS                = $(sort $(dir $(wildcard x_heep_device/target/$(TARGET)/)))
 INC_FOLDERS                += $(sort $(dir $(wildcard x_heep_device/lib/drivers/*/)))
@@ -80,22 +82,7 @@ x_applications/hello_world/hello_world.elf: x_applications/hello_world/hello_wor
 		-L $(RISCV)/riscv32-unknown-elf/lib \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
-x_applications/hello_world/hello_world.flash.elf: x_applications/hello_world/hello_world.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32im -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-T x_heep_linker/link_spiflash.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT_SPIFLASH) \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
-applications/hello_blade/hello_blade.elf: applications/hello_blade/hello_blade.c
+x_applications/example_power_gating_core/example_power_gating_core.elf: x_applications/example_power_gating_core/example_power_gating_core.c
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
 		$(CUSTOM_GCC_FLAGS) \
 		-DHOST_BUILD \
@@ -110,7 +97,7 @@ applications/hello_blade/hello_blade.elf: applications/hello_blade/hello_blade.c
 		-L $(RISCV)/riscv32-unknown-elf/lib \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
-applications/hello_blade/hello_blade.flash.elf: applications/hello_blade/hello_blade.c
+x_applications/hello_world/hello_world.flash.elf: x_applications/hello_world/hello_world.c
 	$(RISCV_EXE_PREFIX)gcc -march=rv32im -o $@ -w -Os -g -nostdlib \
 		$(CUSTOM_GCC_FLAGS) \
 		-DHOST_BUILD \
@@ -142,22 +129,6 @@ applications/blade_conv_16bits/blade_conv_16bits.elf: applications/blade_conv_16
 		-L $(RISCV)/riscv32-unknown-elf/lib \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
-
-applications/blade_imc_tests/blade_imc_tests.elf: applications/blade_imc_tests/blade_imc_tests.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-T x_heep_linker/link.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT) \
-		applications/blade_imc_tests/blade_basic_op.c \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
 applications/hello_cgra/hello_cgra.elf: applications/hello_cgra/hello_cgra.c
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
