@@ -49,7 +49,7 @@ This way the developers are forced to used Questasim to validate their changes.
 To simulate your application with Questasim compile the HDL:
 
 ```
-make questasim-sim
+make questasim-sim-opt
 ```
 
 then, go to your target system built folder
@@ -61,8 +61,21 @@ cd ./build/eslepfl__heepocrates_0/sim-modelsim/
 and type to run your compiled software:
 
 ```
-make run PLUSARGS="c firmware=../../../sw/applications/hello_blade/hello_blade.hex"
+make run RUN_OPT=1 PLUSARGS="c firmware=../../../sw/x_applications/hello_world/hello_world.hex"
 ```
+
+or with `UPF`
+
+```
+make questasim-sim-opt-upf FUSESOC_FLAGS="--flag=use_upf"
+```
+
+and then execute software as:
+
+```
+make run RUN_OPT=1 RUN_UPF=1 PLUSARGS="c firmware=../../../sw/x_applications/example_power_gating_core/example_power_gating_core.hex"
+```
+
 
 ### UART DPI
 

@@ -91,9 +91,6 @@ def main():
 
     xbar_nsalves = obj['ext_xbar_slaves']['nslaves']
 
-    blade_start_address  = string2int(obj['ext_xbar_slaves']['blade']['offset'])
-    blade_size_address  = string2int(obj['ext_xbar_slaves']['blade']['length'])
-
     cgra_start_address  = string2int(obj['ext_xbar_slaves']['cgra']['offset'])
     cgra_size_address  = string2int(obj['ext_xbar_slaves']['cgra']['length'])
 
@@ -108,8 +105,6 @@ def main():
     kwargs = {
         "xbar_nmasters"             : xbar_nmasters,
         "xbar_nsalves"              : xbar_nsalves,
-        "blade_start_address"       : blade_start_address,
-        "blade_size_address"        : blade_size_address,
         "cgra_start_address"        : cgra_start_address,
         "cgra_size_address"         : cgra_size_address,
         "cgra_periph_start_address" : cgra_periph_start_address,
