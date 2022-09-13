@@ -29,6 +29,7 @@ CUSTOM_GCC_FLAGS           =
 
 LIB_CRT                    = $(wildcard x_heep_device/lib/crt/*.S)
 LIB_CRT_SPIFLASH           = $(wildcard x_heep_device/lib/crt_spiflash/*.S)
+LIB_CRT_SPIHOST            = $(wildcard x_heep_device/lib/crt_spihost/*.S)
 LIB_BASE                   = $(wildcard x_heep_device/lib/base/*.c)
 LIB_BASE_FREESTD           = x_heep_device/lib/base/freestanding
 LIB_RUNTIME                = $(wildcard x_heep_device/lib/runtime/*.c)
@@ -40,6 +41,8 @@ LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/gpio/*.c)
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/i2c/*.c)
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/dma/*.c)
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/power_manager/*.c)
+LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/spi_mem/*.c)
+LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/spi_host/*.c)
 LIB_DRIVERS                += $(wildcard device/lib/drivers/cgra/*.c)
 INC_FOLDERS                = $(sort $(dir $(wildcard x_heep_device/target/$(TARGET)/)))
 INC_FOLDERS                += $(sort $(dir $(wildcard x_heep_device/lib/drivers/*/)))
@@ -54,6 +57,9 @@ INC_FOLDERS_GCC             = $(addprefix -I ,$(INC_FOLDERS))
 	$(RISCV_EXE_PREFIX)objcopy -O verilog $< $@
 
 %.flash.hex: %.flash.elf
+	$(RISCV_EXE_PREFIX)objcopy -O verilog --adjust-vma=-0x40000000 $< $@
+
+%.spihost.hex: %.spihost.elf
 	$(RISCV_EXE_PREFIX)objcopy -O verilog --adjust-vma=-0x40000000 $< $@
 
 %.dis: %.elf
@@ -98,7 +104,7 @@ x_applications/example_power_gating_core/example_power_gating_core.elf: x_applic
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
 x_applications/hello_world/hello_world.flash.elf: x_applications/hello_world/hello_world.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32im -o $@ -w -Os -g -nostdlib \
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
 		$(CUSTOM_GCC_FLAGS) \
 		-DHOST_BUILD \
 		-T x_heep_linker/link_spiflash.ld \
@@ -111,6 +117,23 @@ x_applications/hello_world/hello_world.flash.elf: x_applications/hello_world/hel
 		$(LIB_DRIVERS) \
 		-L $(RISCV)/riscv32-unknown-elf/lib \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+x_applications/hello_world/hello_world.spihost.elf: x_applications/hello_world/hello_world.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-T x_heep_linker/link_spihost.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT_SPIHOST) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-Wl,-Map=x_applications/hello_world/hello_world.spihost.map \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
 
 applications/blade_conv_16bits/blade_conv_16bits.elf: applications/blade_conv_16bits/blade_conv_16bits.c
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
