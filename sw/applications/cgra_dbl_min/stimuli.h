@@ -1,4 +1,3 @@
-
 #ifndef _STIMULI_H_
 #define _STIMULI_H_
 

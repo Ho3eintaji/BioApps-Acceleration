@@ -26,12 +26,16 @@
 #include "rv_plic_regs.h"
 #include "heepocrates.h"
 #include "cgra.h"
-
+#include "cgra_bitstream.h"
 #include "stimuli.h"
+
+#define OUTPUT_LENGTH 4
 
 // one dim slot x n input values (data ptrs, constants, ...)
 int32_t cgra_input[CGRA_N_SLOTS][10] __attribute__ ((aligned (4)));
 int8_t cgra_intr_flag;
+int32_t cgra_res[OUTPUT_LENGTH] = {0};
+int32_t exp_res[OUTPUT_LENGTH] = {0};
 
 // Interrupt controller variables
 dif_plic_params_t rv_plic_params;
@@ -50,7 +54,7 @@ void handler_irq_external(void) {
 int main(void) {
 
   printf("Init CGRA context memory...\n");
-  cgra_cmem_init();
+  cgra_cmem_init(cgra_imem_bistream, cgra_kem_bitstream);
   printf("\rdone\n");
 
   printf("Init the PLIC...");
@@ -91,62 +95,73 @@ int main(void) {
   cgra_t cgra;
   cgra.base_addr = mmio_region_from_addr((uintptr_t)CGRA_PERIPH_START_ADDRESS);
 
-  int32_t kernel_res[4]    = {0, 0, 0, 0};
-  int32_t cgra_res[4]      = {0, 0, 0, 0};
-  int32_t length           = INPUT_LENGTH;
+  exp_res[0] = stimuli[0];
+  exp_res[1] = INT32_MAX;
+  exp_res[2] = 0;
+  exp_res[3] = -1;
 
-  kernel_res[0] = stimuli[0];
-  kernel_res[1] = INT32_MIN;
-  kernel_res[2] = 0;
-  kernel_res[3] = -1;
-
-  printf("Run double maximum search on cpu...\n");
-  for(int32_t i=1; i<length; i++) {
-    if (stimuli[i] > kernel_res[0]) {
-      kernel_res[1] = kernel_res[0];
-      kernel_res[0] = stimuli[i] ;
-      kernel_res[3] = kernel_res[2];
-      kernel_res[2] = i;
-    } else if (stimuli[i] > kernel_res[1]) {
-      kernel_res[1] = stimuli[i];
-      kernel_res[3] = i;
+  printf("Run double minimum search on cpu...\n");
+  for(int32_t i=1; i<INPUT_LENGTH; i++) {
+    if (stimuli[i] < exp_res[0]) {
+      exp_res[1] = exp_res[0];
+      exp_res[0] = stimuli[i] ;
+      exp_res[3] = exp_res[2];
+      exp_res[2] = i;
+    } else if (stimuli[i] < exp_res[1]) {
+      exp_res[1] = stimuli[i];
+      exp_res[3] = i;
     }
   }
   printf("\rdone\n");
 
   // Select request slot of CGRA (2 slots)
-  uint8_t cgra_slot = 0;
+  uint8_t cgra_slot = cgra_get_slot(&cgra);
   // input data ptr
   cgra_input[cgra_slot][0] = (int32_t)&stimuli[0];
   // input size
-  cgra_input[cgra_slot][1] = length-1;
+  cgra_input[cgra_slot][1] = INPUT_LENGTH-1;
 
-  printf("Run double maximum search on CGRA...\n");
+  printf("Run double minimum search on CGRA...\n");
+  cgra_perf_cnt_enable(&cgra, 1);
+  int8_t column_idx;
   // Set CGRA kernel pointers
-  cgra_set_read_ptr(&cgra, cgra_slot, (uint32_t) cgra_input[0], 0);
-  cgra_set_write_ptr(&cgra, cgra_slot, (uint32_t) cgra_res, 0);
+  column_idx = 0;
+  cgra_set_read_ptr(&cgra, cgra_slot, (uint32_t) cgra_input[cgra_slot], column_idx);
+  cgra_set_write_ptr(&cgra, cgra_slot, (uint32_t) cgra_res, column_idx);
   // Launch CGRA kernel
-  cgra_set_kernel(&cgra, cgra_slot, DBL_MAX_KER_ID);
-
-  // for (int i=0; i<100; i++) {
-  //   asm volatile("nop");
-  // }
-  // printf("\rdone\n");
+  cgra_set_kernel(&cgra, cgra_slot, DBL_MIN_KER_ID);
 
   // Wait CGRA is done
   while(cgra_intr_flag==0) {
-      wait_for_interrupt();
+    wait_for_interrupt();
   }
 
   // Check the cgra values are correct
   int32_t errors=0;
-  for (int i=0; i<4; i++) {
-    if (cgra_res[i] != kernel_res[i]) {
+  for (int i=0; i<OUTPUT_LENGTH; i++) {
+    if (cgra_res[i] != exp_res[i]) {
+      printf("[%d]: %d != %d\n", i, cgra_res[i], exp_res[i]);
+      printf("[%d]: %08x != %08x\n", i, cgra_res[i], exp_res[i]);
       errors++;
     }
   }
 
-  printf("CGRA test finished with %d errors\n", errors);
+  printf("CGRA double minimum check finished with %d errors\n", errors);
+
+  // Performance counter display
+  printf("CGRA kernel executed: %d\n", cgra_perf_cnt_get_kernel(&cgra));
+  column_idx = 0;
+  printf("CGRA column %d active cycles: %d\n", column_idx, cgra_perf_cnt_get_col_active(&cgra, column_idx));
+  printf("CGRA column %d stall cycles : %d\n", column_idx, cgra_perf_cnt_get_col_stall(&cgra, column_idx));
+  column_idx = 1;
+  printf("CGRA column %d active cycles: %d\n", column_idx, cgra_perf_cnt_get_col_active(&cgra, column_idx));
+  printf("CGRA column %d stall cycles : %d\n", column_idx, cgra_perf_cnt_get_col_stall(&cgra, column_idx));
+  column_idx = 2;
+  printf("CGRA column %d active cycles: %d\n", column_idx, cgra_perf_cnt_get_col_active(&cgra, column_idx));
+  printf("CGRA column %d stall cycles : %d\n", column_idx, cgra_perf_cnt_get_col_stall(&cgra, column_idx));
+  column_idx = 3;
+  printf("CGRA column %d active cycles: %d\n", column_idx, cgra_perf_cnt_get_col_active(&cgra, column_idx));
+  printf("CGRA column %d stall cycles : %d\n", column_idx, cgra_perf_cnt_get_col_stall(&cgra, column_idx));
 
   return EXIT_SUCCESS;
 }
