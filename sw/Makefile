@@ -22,7 +22,7 @@ MAKE			= make
 RISCV                    ?= ~/.riscv
 RISCV_EXE_PREFIX         = $(RISCV)/bin/riscv32-unknown-elf-
 
-TARGET                   ?= sim
+TARGET                   ?= use_fll
 
 # GCC configuration
 CUSTOM_GCC_FLAGS           =
@@ -44,7 +44,7 @@ LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/power_manager
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/spi_mem/*.c)
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/spi_host/*.c)
 LIB_DRIVERS                += $(wildcard device/lib/drivers/cgra/*.c)
-INC_FOLDERS                = $(sort $(dir $(wildcard x_heep_device/target/$(TARGET)/)))
+INC_FOLDERS                = $(sort $(dir $(wildcard device/target/$(TARGET)/)))
 INC_FOLDERS                += $(sort $(dir $(wildcard x_heep_device/lib/drivers/*/)))
 INC_FOLDERS                += $(sort $(dir $(wildcard x_heep_device/lib/base/)))
 INC_FOLDERS                += $(sort $(dir $(wildcard x_heep_device/lib/runtime/)))
