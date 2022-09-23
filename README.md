@@ -24,7 +24,7 @@ source env.csh
 Don't forget to activate the conda enviroment
 
 ```
-$ conda activate core-v-mini-mcu
+conda activate core-v-mini-mcu
 ```
 
 ## Compiling Software
@@ -34,15 +34,24 @@ Don't forget to set the `RISCV` env variable to the compiler folder (without the
 Then go to the `./sw` folder and type:
 
 ```
-$ make applications/hello_blade/hello_blade.hex
+make x_applications/hello_world/hello_world.hex
 ```
 
 This will create the executable file to be loaded in your target system (ASIC, FPGA, Simulation).
+
+### Bypassing the FLL
+
+If you want to bypass the FLL, compile as:
+
+```
+make x_applications/hello_world/hello_world.hex TARGET=bypass_fll
+```
 
 ## Simulating
 
 This project supports simulation only with Questasim as tapeouts should be signed-off with commercial EDA tools.
 This way the developers are forced to used Questasim to validate their changes.
+In addition, Verilator is not compatible with the FLL and the new UART DPI which measures the FLL frequency automatically.
 
 ### Compiling for Questasim
 
@@ -64,7 +73,14 @@ and type to run your compiled software:
 make run RUN_OPT=1 PLUSARGS="c firmware=../../../sw/x_applications/hello_world/hello_world.hex"
 ```
 
-or with `UPF`
+or if you want to bypass the FLL:
+
+```
+make run RUN_OPT=1 PLUSARGS="c firmware=../../../sw/x_applications/hello_world/hello_world.hex bypass_fll=1"
+```
+
+
+If you want to use the `UPF`
 
 ```
 make questasim-sim-opt-upf FUSESOC_FLAGS="--flag=use_upf"
@@ -86,9 +102,9 @@ The output of the UART DPI module is printed in the `uart0.log` file in the simu
 For example, to see the "hello world!" output of the Verilator simulation:
 
 ```
-$ cd ./build/eslepfl__heepocrates_0/sim-verilator
-$ ./Vheepocrates_testharness +firmware=../../../sw/applications/hello_blade/hello_blade.hex
-$ cat uart0.log
+cd ./build/eslepfl__heepocrates_0/sim-verilator
+./Vheepocrates_testharness +firmware=../../../sw/applications/hello_blade/hello_blade.hex
+cat uart0.log
 ```
 ## Debug
 
@@ -113,7 +129,7 @@ Then, please provide a set_libs.tcl and set_constraints.tcl scripts to set link 
 To generate and run synthesis scripts with DC, execute:
 
 ```
-$ fusesoc --cores-root . run --no-export --target=asic_synthesis --setup --build eslepfl::heepocrates 2>&1 | tee buildsim.log
+fusesoc --cores-root . run --no-export --target=asic_synthesis --setup --build eslepfl::heepocrates 2>&1 | tee buildsim.log
 ```
 
 This relies on a fork of [edalize](https://github.com/davideschiavone/edalize) that contains templates for Design Compiler.
