@@ -1,7 +1,3 @@
-//////////////////////////////
-// fxp.h
-// ruben.braojoslopez@epfl.ch
-//////////////////////////////
 #ifndef __FXP_H__
 #define __FXP_H__
 
