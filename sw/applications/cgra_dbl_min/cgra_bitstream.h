@@ -1,20 +1,3 @@
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// Author:         Benoît Denkinger - benoit.denkinger@epfl.ch                //
-//                                                                            //
-// Additional contributions by:                                               //
-//                 Name Surname - email (affiliation if not ESL)              //
-//                                                                            //
-// File Name:      cgra_bistream.h                                            //
-//                                                                            //
-// Project Name:   CGRA_ESL                                                   //
-//                                                                            //
-// Language:       C                                                          //
-//                                                                            //
-// Description:    CGRA instruction and kernel memories bitsreams.            //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
-
 #ifndef _CGRA_BITSTREAM_H_
 #define _CGRA_BITSTREAM_H_
 

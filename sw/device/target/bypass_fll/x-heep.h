@@ -13,6 +13,7 @@ extern "C" {
 #endif  // __cplusplus
 
 #define REFERENCE_CLOCK_Hz 100*1000*1000
+#define REFERENCE_CLOCK_Hz_LOG2 26
 #define UART_BAUDRATE 256000
 #define TARGET_BYPASS_FLL
 

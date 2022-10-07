@@ -1,20 +1,3 @@
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// Author:         Benoît Denkinger - benoit.denkinger@epfl.ch                //
-//                                                                            //
-// Additional contributions by:                                               //
-//                 Name Surname - email (affiliation if not ESL)              //
-//                                                                            //
-// File Name:      hello_cgra.c                                               //
-//                                                                            //
-// Project Name:   CGRA_ESL                                                   //
-//                                                                            //
-// Language:       C                                                          //
-//                                                                            //
-// Description:    CGRA test and example code.                                //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
-
 #include <stdio.h>
 #include <stdlib.h>
 

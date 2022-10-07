@@ -42,7 +42,7 @@ questasim-sim-opt-upf: questasim-sim
 synthesis: heepocrates-gen
 	cd implementation/synthesis/lc_shell/ && lc_shell -f mem_lib2db.tcl -batch;
 	cd implementation/synthesis/lc_shell/ && lc_shell -f fll_lib2db.tcl -batch;
-	fusesoc --cores-root . run --no-export --target=asic_synthesis --setup eslepfl::heepocrates 2>&1 | tee buildsim.log
+	fusesoc --cores-root . run --no-export --target=asic_synthesis --setup --build eslepfl::heepocrates 2>&1 | tee buildsim.log
 
 # Display mcu_gen.py help
 mcu-gen-help:

@@ -129,7 +129,7 @@ Then, please provide a set_libs.tcl and set_constraints.tcl scripts to set link 
 To generate and run synthesis scripts with DC, execute:
 
 ```
-fusesoc --cores-root . run --no-export --target=asic_synthesis --setup --build eslepfl::heepocrates 2>&1 | tee buildsim.log
+make synthesis
 ```
 
 This relies on a fork of [edalize](https://github.com/davideschiavone/edalize) that contains templates for Design Compiler.
