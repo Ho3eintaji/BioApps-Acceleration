@@ -12,6 +12,13 @@
 #include "cgra_bitstream.h"
 #include "fxp.h"
 
+// Use PRINTF instead of PRINTF to remove print by default
+#ifdef DEBUG
+  #define PRINTF(fmt, ...)    printf(fmt, ## __VA_ARGS__)
+#else
+  #define PRINTF(...)
+#endif
+
 #define INPUT_LENGTH 4
 #define OUTPUT_LENGTH 5
 
@@ -45,35 +52,30 @@ void handler_irq_external(void) {
 
 int main(void) {
 
-  printf("Init CGRA context memory...\n");
+  PRINTF("Init CGRA context memory...\n");
   cgra_cmem_init(cgra_imem_bistream, cgra_kem_bitstream);
-  printf("\rdone\n");
+  PRINTF("\rdone\n");
 
-  printf("Init the PLIC...");
+    // Init the PLIC
   rv_plic_params.base_addr = mmio_region_from_addr((uintptr_t)PLIC_START_ADDRESS);
   plic_res = dif_plic_init(rv_plic_params, &rv_plic);
 
-  if (plic_res == kDifPlicOk) {
-    printf("success\n");
-  } else {
-    printf("fail\n;");
+  if (plic_res != kDifPlicOk) {
+    printf("PLIC init failed\n;");
+    return EXIT_FAILURE;
   }
 
-  printf("Set CGRA interrupt priority to 1...");
-  // Set dma priority to 1 (target threshold is by default 0) to trigger an interrupt to the target (the processor)
+  // Set CGRA priority to 1 (target threshold is by default 0) to trigger an interrupt to the target (the processor)
   plic_res = dif_plic_irq_set_priority(&rv_plic, CGRA_INTR, 1);
-  if (plic_res == kDifPlicOk) {
-    printf("success\n");
-  } else {
-    printf("fail\n;");
+  if (plic_res != kDifPlicOk) {
+    printf("Set CGRA interrupt priority to 1 failed\n;");
+    return EXIT_FAILURE;
   }
 
-  printf("Enable CGRA interrupt...");
   plic_res = dif_plic_irq_set_enabled(&rv_plic, CGRA_INTR, 0, kDifPlicToggleEnabled);
-  if (plic_res == kDifPlicOk) {
-    printf("success\n");
-  } else {
-    printf("fail\n;");
+  if (plic_res != kDifPlicOk) {
+    printf("Enable CGRA interrupt failed\n;");
+    return EXIT_FAILURE;
   }
 
   // Enable interrupt on processor side
@@ -203,9 +205,15 @@ int main(void) {
   cgra_set_kernel(&cgra, cgra_slot, CGRA_FUNC_TEST);
 
   // Wait CGRA is done
-  printf("CGRA column status: %d\n", cgra_perf_cnt_get_kernel(&cgra));
+  cgra_intr_flag=0;
   while(cgra_intr_flag==0) {
     wait_for_interrupt();
+  }
+  // Complete the interrupt
+  plic_res = dif_plic_irq_complete(&rv_plic, 0, &intr_num);
+  if (plic_res != kDifPlicOk || intr_num != CGRA_INTR) {
+    printf("CGRA interrupt complete failed\n");
+    return EXIT_FAILURE;
   }
 
   // Check the cgra values are correct
@@ -227,31 +235,31 @@ int main(void) {
   // Performance counter display
   printf("CGRA kernel executed: %d\n", cgra_perf_cnt_get_kernel(&cgra));
   column_idx = 0;
-  printf("CGRA column %d active cycles: %d\n", column_idx, cgra_perf_cnt_get_col_active(&cgra, column_idx));
-  printf("CGRA column %d stall cycles : %d\n", column_idx, cgra_perf_cnt_get_col_stall(&cgra, column_idx));
+  PRINTF("CGRA column %d active cycles: %d\n", column_idx, cgra_perf_cnt_get_col_active(&cgra, column_idx));
+  PRINTF("CGRA column %d stall cycles : %d\n", column_idx, cgra_perf_cnt_get_col_stall(&cgra, column_idx));
   column_idx = 1;
-  printf("CGRA column %d active cycles: %d\n", column_idx, cgra_perf_cnt_get_col_active(&cgra, column_idx));
-  printf("CGRA column %d stall cycles : %d\n", column_idx, cgra_perf_cnt_get_col_stall(&cgra, column_idx));
+  PRINTF("CGRA column %d active cycles: %d\n", column_idx, cgra_perf_cnt_get_col_active(&cgra, column_idx));
+  PRINTF("CGRA column %d stall cycles : %d\n", column_idx, cgra_perf_cnt_get_col_stall(&cgra, column_idx));
   column_idx = 2;
-  printf("CGRA column %d active cycles: %d\n", column_idx, cgra_perf_cnt_get_col_active(&cgra, column_idx));
-  printf("CGRA column %d stall cycles : %d\n", column_idx, cgra_perf_cnt_get_col_stall(&cgra, column_idx));
+  PRINTF("CGRA column %d active cycles: %d\n", column_idx, cgra_perf_cnt_get_col_active(&cgra, column_idx));
+  PRINTF("CGRA column %d stall cycles : %d\n", column_idx, cgra_perf_cnt_get_col_stall(&cgra, column_idx));
   column_idx = 3;
-  printf("CGRA column %d active cycles: %d\n", column_idx, cgra_perf_cnt_get_col_active(&cgra, column_idx));
-  printf("CGRA column %d stall cycles : %d\n", column_idx, cgra_perf_cnt_get_col_stall(&cgra, column_idx));
+  PRINTF("CGRA column %d active cycles: %d\n", column_idx, cgra_perf_cnt_get_col_active(&cgra, column_idx));
+  PRINTF("CGRA column %d stall cycles : %d\n", column_idx, cgra_perf_cnt_get_col_stall(&cgra, column_idx));
   cgra_perf_cnt_reset(&cgra);
-  printf("CGRA kernel executed: %d\n", cgra_perf_cnt_get_kernel(&cgra));
+  printf("CGRA kernel executed (after counter reset): %d\n", cgra_perf_cnt_get_kernel(&cgra));
   column_idx = 0;
-  printf("CGRA column %d active cycles: %d\n", column_idx, cgra_perf_cnt_get_col_active(&cgra, column_idx));
-  printf("CGRA column %d stall cycles : %d\n", column_idx, cgra_perf_cnt_get_col_stall(&cgra, column_idx));
+  PRINTF("CGRA column %d active cycles: %d\n", column_idx, cgra_perf_cnt_get_col_active(&cgra, column_idx));
+  PRINTF("CGRA column %d stall cycles : %d\n", column_idx, cgra_perf_cnt_get_col_stall(&cgra, column_idx));
   column_idx = 1;
-  printf("CGRA column %d active cycles: %d\n", column_idx, cgra_perf_cnt_get_col_active(&cgra, column_idx));
-  printf("CGRA column %d stall cycles : %d\n", column_idx, cgra_perf_cnt_get_col_stall(&cgra, column_idx));
+  PRINTF("CGRA column %d active cycles: %d\n", column_idx, cgra_perf_cnt_get_col_active(&cgra, column_idx));
+  PRINTF("CGRA column %d stall cycles : %d\n", column_idx, cgra_perf_cnt_get_col_stall(&cgra, column_idx));
   column_idx = 2;
-  printf("CGRA column %d active cycles: %d\n", column_idx, cgra_perf_cnt_get_col_active(&cgra, column_idx));
-  printf("CGRA column %d stall cycles : %d\n", column_idx, cgra_perf_cnt_get_col_stall(&cgra, column_idx));
+  PRINTF("CGRA column %d active cycles: %d\n", column_idx, cgra_perf_cnt_get_col_active(&cgra, column_idx));
+  PRINTF("CGRA column %d stall cycles : %d\n", column_idx, cgra_perf_cnt_get_col_stall(&cgra, column_idx));
   column_idx = 3;
-  printf("CGRA column %d active cycles: %d\n", column_idx, cgra_perf_cnt_get_col_active(&cgra, column_idx));
-  printf("CGRA column %d stall cycles : %d\n", column_idx, cgra_perf_cnt_get_col_stall(&cgra, column_idx));
+  PRINTF("CGRA column %d active cycles: %d\n", column_idx, cgra_perf_cnt_get_col_active(&cgra, column_idx));
+  PRINTF("CGRA column %d stall cycles : %d\n", column_idx, cgra_perf_cnt_get_col_stall(&cgra, column_idx));
 
   return EXIT_SUCCESS;
 }
