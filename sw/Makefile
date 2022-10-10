@@ -28,8 +28,8 @@ TARGET                   ?= use_fll
 CUSTOM_GCC_FLAGS           =
 
 LIB_CRT                    = $(wildcard x_heep_device/lib/crt/*.S)
-LIB_CRT_SPIFLASH           = $(wildcard x_heep_device/lib/crt_spiflash/*.S)
-LIB_CRT_SPIHOST            = $(wildcard x_heep_device/lib/crt_spihost/*.S)
+LIB_CRT_FLASH_EXEC         = $(wildcard x_heep_device/lib/crt_flash_exec/*.S)
+LIB_CRT_FLASH_LOAD            = $(wildcard x_heep_device/lib/crt_flash_load/*.S)
 LIB_BASE                   = $(wildcard x_heep_device/lib/base/*.c)
 LIB_BASE_FREESTD           = x_heep_device/lib/base/freestanding
 LIB_RUNTIME                = $(wildcard x_heep_device/lib/runtime/*.c)
@@ -49,6 +49,7 @@ INC_FOLDERS                = $(sort $(dir $(wildcard device/target/$(TARGET)/)))
 INC_FOLDERS                += $(sort $(dir $(wildcard x_heep_device/lib/drivers/*/)))
 INC_FOLDERS                += $(sort $(dir $(wildcard x_heep_device/lib/base/)))
 INC_FOLDERS                += $(sort $(dir $(wildcard x_heep_device/lib/runtime/)))
+INC_FOLDERS                += $(sort $(dir $(wildcard device/lib/crt/)))
 INC_FOLDERS                += $(sort $(dir $(wildcard device/lib/drivers/*/)))
 INC_FOLDERS                += $(sort $(dir $(wildcard device/lib/runtime/)))
 INC_FOLDERS_GCC             = $(addprefix -I ,$(INC_FOLDERS))
@@ -57,10 +58,10 @@ INC_FOLDERS_GCC             = $(addprefix -I ,$(INC_FOLDERS))
 %.hex: %.elf
 	$(RISCV_EXE_PREFIX)objcopy -O verilog $< $@
 
-%.flash.hex: %.flash.elf
+%.flash_exec.hex: %.flash_exec.elf
 	$(RISCV_EXE_PREFIX)objcopy -O verilog --adjust-vma=-0x40000000 $< $@
 
-%.spihost.hex: %.spihost.elf
+%.flash_load.hex: %.flash_load.elf
 	$(RISCV_EXE_PREFIX)objcopy -O verilog --adjust-vma=-0x40000000 $< $@
 
 %.dis: %.elf
@@ -78,6 +79,7 @@ x_applications/hello_world/hello_world.elf: x_applications/hello_world/hello_wor
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
 		$(CUSTOM_GCC_FLAGS) \
 		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
 		-T x_heep_linker/link.ld \
 		-I $(RISCV)/riscv32-unknown-elf/include \
 		$(INC_FOLDERS_GCC) \
@@ -93,6 +95,7 @@ x_applications/example_power_gating_core/example_power_gating_core.elf: x_applic
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
 		$(CUSTOM_GCC_FLAGS) \
 		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
 		-T x_heep_linker/link.ld \
 		-I $(RISCV)/riscv32-unknown-elf/include \
 		$(INC_FOLDERS_GCC) \
@@ -104,30 +107,32 @@ x_applications/example_power_gating_core/example_power_gating_core.elf: x_applic
 		-L $(RISCV)/riscv32-unknown-elf/lib \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
-x_applications/hello_world/hello_world.flash.elf: x_applications/hello_world/hello_world.c
+x_applications/hello_world/hello_world.flash_exec.elf: x_applications/hello_world/hello_world.c
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
 		$(CUSTOM_GCC_FLAGS) \
 		-DHOST_BUILD \
-		-T x_heep_linker/link_spiflash.ld \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link_flash_exec.ld \
 		-I $(RISCV)/riscv32-unknown-elf/include \
 		$(INC_FOLDERS_GCC) \
 		-static \
-		$(LIB_CRT_SPIFLASH) \
+		$(LIB_CRT_FLASH_EXEC) \
 		$^ $(LIB_RUNTIME) \
 		$(LIB_BASE) \
 		$(LIB_DRIVERS) \
 		-L $(RISCV)/riscv32-unknown-elf/lib \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
-x_applications/hello_world/hello_world.spihost.elf: x_applications/hello_world/hello_world.c
+x_applications/hello_world/hello_world.flash_load.elf: x_applications/hello_world/hello_world.c
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
 		$(CUSTOM_GCC_FLAGS) \
 		-DHOST_BUILD \
-		-T x_heep_linker/link_spihost.ld \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link_flash_load.ld \
 		-I $(RISCV)/riscv32-unknown-elf/include \
 		$(INC_FOLDERS_GCC) \
 		-static \
-		$(LIB_CRT_SPIHOST) \
+		$(LIB_CRT_FLASH_LOAD) \
 		$^ $(LIB_RUNTIME) \
 		$(LIB_BASE) \
 		$(LIB_DRIVERS) \
@@ -140,6 +145,7 @@ applications/blade_conv_16bits/blade_conv_16bits.elf: applications/blade_conv_16
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
 		$(CUSTOM_GCC_FLAGS) \
 		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
 		-T x_heep_linker/link.ld \
 		-I $(RISCV)/riscv32-unknown-elf/include \
 		$(INC_FOLDERS_GCC) \
@@ -158,6 +164,7 @@ applications/cgra_func_test/main.elf: applications/cgra_func_test/main.c applica
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
 		$(CUSTOM_GCC_FLAGS) \
 		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
 		-T x_heep_linker/link.ld \
 		-I $(RISCV)/riscv32-unknown-elf/include \
 		$(INC_FOLDERS_GCC) \
@@ -173,6 +180,7 @@ applications/cgra_kernels_test/main.elf: applications/cgra_kernels_test/main.c
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
 		$(CUSTOM_GCC_FLAGS) \
 		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
 		-T x_heep_linker/link.ld \
 		-I $(RISCV)/riscv32-unknown-elf/include \
 		$(INC_FOLDERS_GCC) \
@@ -188,6 +196,7 @@ applications/fll_test/fll_test.elf: applications/fll_test/fll_test.c
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
 		$(CUSTOM_GCC_FLAGS) \
 		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
 		-T x_heep_linker/link.ld \
 		-I $(RISCV)/riscv32-unknown-elf/include \
 		$(INC_FOLDERS_GCC) \
@@ -200,34 +209,53 @@ applications/fll_test/fll_test.elf: applications/fll_test/fll_test.c
 		-L $(RISCV)/riscv32-unknown-elf/lib \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
-applications/fll_test/fll_test.flash.elf: applications/fll_test/fll_test.c
+applications/fll_test/fll_test.flash_exec.elf: applications/fll_test/fll_test.c
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
 		$(CUSTOM_GCC_FLAGS) \
 		-DHOST_BUILD \
-		-T x_heep_linker/link_spiflash.ld \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link_flash_exec.ld \
 		-I $(RISCV)/riscv32-unknown-elf/include \
 		$(INC_FOLDERS_GCC) \
 		-static \
-		$(LIB_CRT_SPIFLASH) \
+		$(LIB_CRT_FLASH_EXEC) \
 		$^ $(LIB_RUNTIME) \
 		$(LIB_BASE) \
 		$(LIB_DRIVERS) \
 		-L $(RISCV)/riscv32-unknown-elf/lib \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
-applications/fll_test/fll_test.spihost.elf: applications/fll_test/fll_test.c
+applications/fll_test/fll_test.flash_load.elf: applications/fll_test/fll_test.c
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
 		$(CUSTOM_GCC_FLAGS) \
 		-DHOST_BUILD \
-		-T x_heep_linker/link_spihost.ld \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link_flash_load.ld \
 		-I $(RISCV)/riscv32-unknown-elf/include \
 		$(INC_FOLDERS_GCC) \
 		-static \
-		$(LIB_CRT_SPIHOST) \
+		$(LIB_CRT_FLASH_LOAD) \
 		$^ $(LIB_RUNTIME) \
 		$(LIB_BASE) \
 		$(LIB_DRIVERS) \
 		-Wl,-Map=applications/fll_test/fll_test.spihost.map \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+x_applications/spi_host_dma_example/spi_host_dma_example.flash_load.elf: x_applications/spi_host_dma_example/spi_host_dma_example.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link_flash_load.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT_FLASH_LOAD) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-Wl,-Map=x_applications/spi_host_dma_example/spi_host_dma_example.flash_load.map \
 		-L $(RISCV)/riscv32-unknown-elf/lib \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
