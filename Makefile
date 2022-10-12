@@ -44,6 +44,9 @@ synthesis: heepocrates-gen
 	cd implementation/synthesis/lc_shell/ && lc_shell -f fll_lib2db.tcl -batch;
 	fusesoc --cores-root . run --no-export --target=asic_synthesis --setup --build eslepfl::heepocrates 2>&1 | tee buildsim.log
 
+pnr:
+	pushd implementation/pnr/ ; ./run_pnr_flow.csh; popd;
+
 # Display mcu_gen.py help
 mcu-gen-help:
 	cd hw/vendor/esl_epfl_x_heep && \
