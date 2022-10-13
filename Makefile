@@ -21,8 +21,13 @@ mcu-gen:
 	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir sw/device/lib/runtime --cpu cv32e20 --pkg-sv sw/device/lib/runtime/core_v_mini_mcu.h.tpl  && \
 	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir sw/linker --memorybanks 10 --linker_script sw/linker/link.ld.tpl  && \
 	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir sw/linker --memorybanks 10 --linker_script sw/linker/link_flash_exec.ld.tpl && \
-	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir sw/linker --memorybanks 10 --linker_script sw/linker/link_flash_load.ld.tpl
+	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir sw/linker --memorybanks 10 --linker_script sw/linker/link_flash_load.ld.tpl && \
+	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir hw/ip/power_manager/rtl --memorybanks $(MEMORY_BANKS) --pkg-sv hw/ip/power_manager/data/power_manager.sv.tpl && \
+	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir hw/ip/power_manager/data --memorybanks $(MEMORY_BANKS) --pkg-sv hw/ip/power_manager/data/power_manager.hjson.tpl && \
+	bash -c "cd hw/ip/power_manager; source power_manager_gen.sh; cd ../../../" && \
+	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir sw/device/lib/drivers/power_manager --memorybanks $(MEMORY_BANKS) --pkg-sv sw/device/lib/drivers/power_manager/data/power_manager.h.tpl
 
+# Disp
 heepocrates-gen: mcu-gen
 	python util/heepocrates_gen.py --cfg heepocrates_cfg.hjson --outdir hw/heepocrates/include --pkg-sv hw/heepocrates/include/heepocrates_pkg.sv.tpl;
 	python util/heepocrates_gen.py --cfg heepocrates_cfg.hjson --outdir sw/device/lib/runtime --pkg-sv sw/device/lib/runtime/heepocrates.h.tpl;
