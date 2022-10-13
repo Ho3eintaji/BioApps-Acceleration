@@ -41,6 +41,7 @@ LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/gpio/*.c)
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/i2c/*.c)
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/dma/*.c)
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/power_manager/*.c)
+LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/fast_intr_ctrl/*.c)
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/spi_mem/*.c)
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/spi_host/*.c)
 LIB_DRIVERS                += $(wildcard device/lib/drivers/cgra/*.c)
@@ -89,6 +90,23 @@ x_applications/hello_world/hello_world.elf: x_applications/hello_world/hello_wor
 		$(LIB_BASE) \
 		$(LIB_DRIVERS) \
 		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+x_applications/dma_example/dma_example.elf: x_applications/dma_example/dma_example.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-Wl,-Map=x_applications/dma_example/dma_example.map \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
 x_applications/example_power_gating_core/example_power_gating_core.elf: x_applications/example_power_gating_core/example_power_gating_core.c

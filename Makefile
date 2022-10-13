@@ -27,7 +27,6 @@ mcu-gen:
 	bash -c "cd hw/ip/power_manager; source power_manager_gen.sh; cd ../../../" && \
 	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir sw/device/lib/drivers/power_manager --memorybanks $(MEMORY_BANKS) --pkg-sv sw/device/lib/drivers/power_manager/data/power_manager.h.tpl
 
-# Disp
 heepocrates-gen: mcu-gen
 	python util/heepocrates_gen.py --cfg heepocrates_cfg.hjson --outdir hw/heepocrates/include --pkg-sv hw/heepocrates/include/heepocrates_pkg.sv.tpl;
 	python util/heepocrates_gen.py --cfg heepocrates_cfg.hjson --outdir sw/device/lib/runtime --pkg-sv sw/device/lib/runtime/heepocrates.h.tpl;
