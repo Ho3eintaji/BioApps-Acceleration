@@ -12,9 +12,11 @@
 # we are not configurint Heepocrates anyway as we hardwire the cpu and bus values
 mcu-gen:
 	cd hw/vendor/esl_epfl_x_heep && \
-	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir hw/core-v-mini-mcu/include --cpu cv32e20 --bus NtoM --memorybanks 10 --pkg-sv hw/core-v-mini-mcu/include/core_v_mini_mcu_pkg.sv.tpl  && \
+	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir hw/core-v-mini-mcu/include --cpu cv32e20 --bus NtoM --memorybanks 10 --pkg-sv hw/core-v-mini-mcu/include/core_v_mini_mcu_pkg.sv.tpl  --external_pads ../../../heepocrates_pad.hjson && \
 	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir hw/core-v-mini-mcu/ --memorybanks 10 --tpl-sv hw/core-v-mini-mcu/system_bus.sv.tpl  && \
-	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir hw/core-v-mini-mcu/ --tpl-sv hw/core-v-mini-mcu/pad_ring.sv.tpl  && \
+	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir hw/core-v-mini-mcu/ --tpl-sv hw/core-v-mini-mcu/core_v_mini_mcu.sv.tpl && \
+	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir ../../../hw/heepocrates/ --tpl-sv hw/system/pad_ring.sv.tpl --external_pads ../../../heepocrates_pad.hjson && \
+	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir ../../../hw/heepocrates/ --tpl-sv ../../../hw/heepocrates/heepocrates.sv.tpl --external_pads ../../../heepocrates_pad.hjson && \
 	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir tb/ --memorybanks 10 --tpl-sv tb/tb_util.svh.tpl  && \
 	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir sw/device/lib/runtime --cpu cv32e20 --pkg-sv sw/device/lib/runtime/core_v_mini_mcu.h.tpl  && \
 	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir sw/linker --memorybanks 10 --linker_script sw/linker/link.ld.tpl  && \
@@ -25,6 +27,7 @@ heepocrates-gen: mcu-gen
 	python util/heepocrates_gen.py --cfg heepocrates_cfg.hjson --outdir hw/heepocrates/include --pkg-sv hw/heepocrates/include/heepocrates_pkg.sv.tpl;
 	python util/heepocrates_gen.py --cfg heepocrates_cfg.hjson --outdir sw/device/lib/runtime --pkg-sv sw/device/lib/runtime/heepocrates.h.tpl;
 	$(MAKE) verible
+
 
 questasim-sim: heepocrates-gen
 	fusesoc --cores-root . run --no-export --target=sim --tool=modelsim $(FUSESOC_FLAGS) --setup --build eslepfl::heepocrates 2>&1 | tee buildsim.log
