@@ -50,10 +50,10 @@ synthesis: heepocrates-gen
 	cd implementation/synthesis/lc_shell/ && lc_shell -f fll_lib2db.tcl -batch;
 	fusesoc --cores-root . run --no-export --target=asic_synthesis --setup --build eslepfl::heepocrates 2>&1 | tee buildsim.log
 
-io: 
+implementation/pnr/inputs/heepocrates.io:
 	pushd implementation/pnr/inputs/ ; ./create_io_file_from_spreadsheet.py; popd;
 
-pnr: io
+pnr: implementation/pnr/inputs/heepocrates.io
 	pushd implementation/pnr/ ; ./run_pnr_flow.csh; popd;
 
 # Display mcu_gen.py help
