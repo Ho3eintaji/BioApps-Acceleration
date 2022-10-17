@@ -118,13 +118,7 @@ TODO
 
 Only if you are running on eslsrv:
 
-On BASH shell:
-
-```
-source env_dc.sh
-```
-
-Then, please provide a set_libs.tcl and set_constraints.tcl scripts to set link and target libraries, and constraints as the clock.
+Please provide a set_libs.tcl and set_constraints.tcl scripts to set link and target libraries, and constraints as the clock.
 
 To generate and run synthesis scripts with DC, execute:
 
