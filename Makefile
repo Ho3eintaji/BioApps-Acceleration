@@ -22,10 +22,13 @@ mcu-gen:
 	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir sw/linker --memorybanks 10 --linker_script sw/linker/link.ld.tpl  && \
 	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir sw/linker --memorybanks 10 --linker_script sw/linker/link_flash_exec.ld.tpl && \
 	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir sw/linker --memorybanks 10 --linker_script sw/linker/link_flash_load.ld.tpl && \
-	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir hw/ip/power_manager/rtl --memorybanks $(MEMORY_BANKS) --pkg-sv hw/ip/power_manager/data/power_manager.sv.tpl && \
-	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir hw/ip/power_manager/data --memorybanks $(MEMORY_BANKS) --pkg-sv hw/ip/power_manager/data/power_manager.hjson.tpl && \
+	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir hw/ip/power_manager/rtl --memorybanks 10 --pkg-sv hw/ip/power_manager/data/power_manager.sv.tpl && \
+	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir hw/ip/power_manager/data --memorybanks 10 --pkg-sv hw/ip/power_manager/data/power_manager.hjson.tpl && \
 	bash -c "cd hw/ip/power_manager; source power_manager_gen.sh; cd ../../../" && \
-	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir sw/device/lib/drivers/power_manager --memorybanks $(MEMORY_BANKS) --pkg-sv sw/device/lib/drivers/power_manager/data/power_manager.h.tpl
+	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir sw/device/lib/drivers/power_manager --memorybanks $(MEMORY_BANKS) --pkg-sv sw/device/lib/drivers/power_manager/data/power_manager.h.tpl && \
+	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir hw/system/pad_control/data --pkg-sv hw/system/pad_control/data/pad_control.hjson.tpl  --external_pads ../../../heepocrates_pad.hjson && \
+	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir hw/system/pad_control/rtl --pkg-sv hw/system/pad_control/rtl/pad_control.sv.tpl  --external_pads ../../../heepocrates_pad.hjson && \
+	bash -c "cd hw/system/pad_control; source pad_control_gen.sh; cd ../../../"
 
 heepocrates-gen: mcu-gen
 	python util/heepocrates_gen.py --cfg heepocrates_cfg.hjson --outdir hw/heepocrates/include --pkg-sv hw/heepocrates/include/heepocrates_pkg.sv.tpl;
@@ -44,6 +47,10 @@ questasim-sim-tsmc65-opt: heepocrates-gen
 
 questasim-sim-opt-upf: questasim-sim
 	$(MAKE) -C build/eslepfl__heepocrates_0/sim-modelsim/ opt-upf
+
+questasim-sim-postsynth-opt:
+	fusesoc --cores-root . run --no-export --target=sim_postsynthesis --tool=modelsim $(FUSESOC_FLAGS) --setup --build eslepfl::heepocrates 2>&1 | tee buildsim.log
+	$(MAKE) -C build/eslepfl__heepocrates_0/sim_postsynthesis-modelsim/ opt
 
 synthesis: heepocrates-gen
 	cd implementation/synthesis/lc_shell/ && lc_shell -f mem_lib2db.tcl -batch;
@@ -68,10 +75,13 @@ heepocrates-gen-help:
 verible:
 	util/format-verible;
 
-clean: clean-app clean-sim
+clean: clean-app clean-sim clean-pnr-io
 
 clean-sim:
 	@rm -rf build
 
 clean-app:
 	$(MAKE) -C sw clean
+
+clean-pnr-io:
+	rm -f implementation/pnr/inputs/heepocrates.io

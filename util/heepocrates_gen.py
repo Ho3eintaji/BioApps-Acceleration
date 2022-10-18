@@ -100,17 +100,22 @@ def main():
     fll_start_address  = string2int(obj['ext_periph']['fll']['offset'])
     fll_size_address   = string2int(obj['ext_periph']['fll']['length'])
 
+    coubertin_periph_start_address  = string2int(obj['ext_periph']['coubertin_periph']['offset'])
+    coubertin_periph_size_address   = string2int(obj['ext_periph']['coubertin_periph']['length'])
+
 
 
     kwargs = {
-        "xbar_nmasters"             : xbar_nmasters,
-        "xbar_nsalves"              : xbar_nsalves,
-        "cgra_start_address"        : cgra_start_address,
-        "cgra_size_address"         : cgra_size_address,
-        "cgra_periph_start_address" : cgra_periph_start_address,
-        "cgra_periph_size_address"  : cgra_periph_size_address,
-        "fll_start_address"         : fll_start_address,
-        "fll_size_address"          : fll_size_address,
+        "xbar_nmasters"                   : xbar_nmasters,
+        "xbar_nsalves"                    : xbar_nsalves,
+        "cgra_start_address"              : cgra_start_address,
+        "cgra_size_address"               : cgra_size_address,
+        "cgra_periph_start_address"       : cgra_periph_start_address,
+        "cgra_periph_size_address"        : cgra_periph_size_address,
+        "fll_start_address"               : fll_start_address,
+        "fll_size_address"                : fll_size_address,
+        "coubertin_periph_start_address"  : coubertin_periph_start_address,
+        "coubertin_periph_size_address"   : coubertin_periph_size_address,
     }
 
     ###########

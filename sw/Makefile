@@ -44,6 +44,7 @@ LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/power_manager
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/fast_intr_ctrl/*.c)
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/spi_mem/*.c)
 LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/spi_host/*.c)
+LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/pad_control/*.c)
 LIB_DRIVERS                += $(wildcard device/lib/drivers/cgra/*.c)
 LIB_DRIVERS                += $(wildcard device/lib/drivers/fll/*.c)
 INC_FOLDERS                = $(sort $(dir $(wildcard device/target/$(TARGET)/)))
