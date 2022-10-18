@@ -92,7 +92,6 @@ and then execute software as:
 make run RUN_OPT=1 RUN_UPF=1 PLUSARGS="c firmware=../../../sw/x_applications/example_power_gating_core/example_power_gating_core.hex"
 ```
 
-
 ### UART DPI
 
 To simulate the UART, we use the LowRISC OpenTitan [UART DPI](https://github.com/lowRISC/opentitan/tree/master/hw/dv/dpi/uartdpi).
@@ -106,14 +105,6 @@ cd ./build/eslepfl__heepocrates_0/sim-verilator
 ./Vheepocrates_testharness +firmware=../../../sw/applications/hello_blade/hello_blade.hex
 cat uart0.log
 ```
-## Debug
-
-TODO
-
-## Emulation
-
-TODO
-
 ### Synthesis with Synopsys Design Compiler
 
 Only if you are running on eslsrv:
@@ -128,12 +119,51 @@ make synthesis
 
 This relies on a fork of [edalize](https://github.com/davideschiavone/edalize) that contains templates for Design Compiler.
 
-## Change Peripheral Memory Map
 
-TODO: Create a template file to configure an heepocrates obi and periphearl bus that is external to x-heep.
+### Postsynthesis Simulation for Questasim
 
-## Files are formatted with Verible
+To simulate your application with Questasim compile the `netlist` you generated before as:
 
-We use version v0.0-1824-ga3b5bedf
+```
+make questasim-sim-postsynth-opt
+```
 
-See: [Install Verible](https://docs.opentitan.org/doc/ug/install_instructions/)
+then, go to your target system built folder
+
+```
+cd ./build/eslepfl__heepocrates_0/sim_postsynthesis-modelsim/
+```
+
+and type to run your compiled software:
+
+```
+make run RUN_OPT=1 PLUSARGS="c firmware=../../../sw/x_applications/hello_world/hello_world.flash_load.hex boot_sel=1 execute_from_flash=0"
+```
+
+If you want to debug it with the `gui`, as I strongly encourage, once inside `Questasim`
+
+
+```
+VSIM > do ../../../scripts/sim/No_NumericStdNoWarnings.tcl
+VSIM > do ../../../scripts/sim/waves_postsynth.do
+```
+
+This shows the most important post synthesis waveforms.
+
+
+The simulation is very slow... `be patience`.
+
+### Place and Route with Innovus
+
+Only if you are running on eslsrv:
+
+```
+make pnr
+```
+
+This relies on the [Google Sheet](https://docs.google.com/spreadsheets/d/1R42f33qJquhNsswMwyr-gp6fZFzjrIKRiU6ttj8dK-8/edit#gid=1605553209) that contains the IO and on the synthesized
+`netlist`.
+
+### Postpnr Simulation for Questasim
+
+`to do done`.
