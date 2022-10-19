@@ -18,14 +18,14 @@ mcu-gen:
 	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir ../../../hw/heepocrates/ --tpl-sv ../../../hw/heepocrates/heepocrates_pad_ring.sv.tpl --external_pads ../../../heepocrates_pad.hjson && \
 	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir ../../../hw/heepocrates/ --tpl-sv ../../../hw/heepocrates/heepocrates.sv.tpl --external_pads ../../../heepocrates_pad.hjson && \
 	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir tb/ --memorybanks 10 --tpl-sv tb/tb_util.svh.tpl  && \
-	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir sw/device/lib/runtime --cpu cv32e20 --pkg-sv sw/device/lib/runtime/core_v_mini_mcu.h.tpl  && \
+	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir sw/device/lib/runtime --cpu cv32e20 --memorybanks 10 --pkg-sv sw/device/lib/runtime/core_v_mini_mcu.h.tpl  && \
 	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir sw/linker --memorybanks 10 --linker_script sw/linker/link.ld.tpl  && \
 	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir sw/linker --memorybanks 10 --linker_script sw/linker/link_flash_exec.ld.tpl && \
 	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir sw/linker --memorybanks 10 --linker_script sw/linker/link_flash_load.ld.tpl && \
 	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir hw/ip/power_manager/rtl --memorybanks 10 --pkg-sv hw/ip/power_manager/data/power_manager.sv.tpl && \
 	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir hw/ip/power_manager/data --memorybanks 10 --pkg-sv hw/ip/power_manager/data/power_manager.hjson.tpl && \
 	bash -c "cd hw/ip/power_manager; source power_manager_gen.sh; cd ../../../" && \
-	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir sw/device/lib/drivers/power_manager --memorybanks $(MEMORY_BANKS) --pkg-sv sw/device/lib/drivers/power_manager/data/power_manager.h.tpl && \
+	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir sw/device/lib/drivers/power_manager --memorybanks 10 --pkg-sv sw/device/lib/drivers/power_manager/data/power_manager.h.tpl && \
 	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir hw/system/pad_control/data --pkg-sv hw/system/pad_control/data/pad_control.hjson.tpl  --external_pads ../../../heepocrates_pad.hjson && \
 	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir hw/system/pad_control/rtl --pkg-sv hw/system/pad_control/rtl/pad_control.sv.tpl  --external_pads ../../../heepocrates_pad.hjson && \
 	bash -c "cd hw/system/pad_control; source pad_control_gen.sh; cd ../../../"
