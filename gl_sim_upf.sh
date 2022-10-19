@@ -1,0 +1,1 @@
+vopt -work work -debugdb -fsmdebug -pa_genrpt=pa+de+cell+conn+pst+srcsink -pa_enable=vsim_msgs+highlight+debug -pa_checks=s+ul+i+p+cp+upc+ugc -pa_upf ../../../heepocrates.postsynth.upf -pa_top /tb_top/heepocrates_testharness_i/heepocrates_i -pa_lib work -pa_libertyfiles=../../../hw/asic/std_cells/tcbn65lplvtwc1d081d08.lib -pa_gls "+acc=npr" tb_top -o tb_top_vopt 
