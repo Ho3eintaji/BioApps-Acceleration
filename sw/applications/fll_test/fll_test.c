@@ -22,7 +22,7 @@ static uint32_t fll_get_freq_from_mult_div(uint32_t mult_factor, uint32_t clk_di
 
 int main(void) {
 
-  uint32_t fll_freq;
+  uint32_t fll_freq, fll_freq_real;
 
   // FLL peripheral structure to access the registers
   fll_t fll;
@@ -41,41 +41,41 @@ int main(void) {
   printf("fll_freq Hz: %d\n", fll_freq);
 
 #ifdef FLL_DEFAULT_VAL_TEST
-  #ifdef PRINT_FLL_DEFAULT_VAL_TEST
-    printf("================ FLL DEFAULT/RESET VALUES CHECK ================\n");
-    printf("fll_conf1.mult_factor (resval=0xC35): %08x\n", fll_conf1.mult_factor);
-    printf("fll_conf1.dco_input (resval=0x158): %08x\n", fll_conf1.dco_input);
-    printf("fll_conf1.clk_div (resval=0x002): %08x\n", fll_conf1.clk_div);
-    printf("fll_conf1.lock_enable (resval=0x001): %08x\n", fll_conf1.lock_enable);
-    printf("fll_conf1.op_mode (resval=0x000): %08x\n", fll_conf1.op_mode);
-    printf("fll_conf2.loop_gain (resval=0x008): %08x\n", fll_conf2.loop_gain);
-    printf("fll_conf2.deassert_cycles (resval=0x010): %08x\n", fll_conf2.deassert_cycles);
-    printf("fll_conf2.assert_cycles (resval=0x010): %08x\n", fll_conf2.assert_cycles);
-    printf("fll_conf2.lock_tolerance (resval=0x200): %08x\n", fll_conf2.lock_tolerance);
-    printf("fll_conf2.clk_sta_mode (resval=0x000): %08x\n", fll_conf2.clk_sta_mode);
-    printf("fll_conf2.open_loop_enable (resval=0x000): %08x\n", fll_conf2.open_loop_enable);
-    printf("fll_conf2.dithering_enable (resval=0x000): %08x\n", fll_conf2.dithering_enable);
-    printf("fll_integrator.frac_part (resval=0x000): %08x\n", fll_integrator.frac_part);
-    printf("fll_integrator.int_part (resval=0x158): %08x\n", fll_integrator.int_part);
-  #endif
-
-  if (fll_conf1.mult_factor      != 0xC35 ||
-      fll_conf1.dco_input        != 0x158 ||
+  if (fll_conf1.mult_factor      != 6103  || // reset value 0xC35 is changed by external_crt0.S init to 100 MHz
+      fll_conf1.dco_input        != 395   || // reset value 0x158 is changed by external_crt0.S init to 100 MHz
       fll_conf1.clk_div          != 0x002 ||
       fll_conf1.lock_enable      != 0x001 ||
-      fll_conf1.op_mode          != 0x000 ||
+      fll_conf1.op_mode          != 0x001 || // reset value 0x000 is changed by external_crt0.S init to 100 MHz
       fll_conf2.loop_gain        != 0x008 ||
       fll_conf2.deassert_cycles  != 0x010 ||
-      fll_conf2.assert_cycles    != 0x010 ||
-      fll_conf2.lock_tolerance   != 0x200 ||
+      fll_conf2.assert_cycles    != 0x006 || // reset value 0x010 is changed by external_crt0.S init to 100 MHz
+      fll_conf2.lock_tolerance   != 0x050 || // reset value 0x200 is changed by external_crt0.S init to 100 MHz
       fll_conf2.clk_sta_mode     != 0x000 ||
       fll_conf2.open_loop_enable != 0x000 ||
       fll_conf2.dithering_enable != 0x000 ||
-      fll_integrator.frac_part   != 0x000 ||
-      fll_integrator.int_part    != 0x158) {
+      fll_integrator.frac_part   != 0x058 || // reset value 0x000 is changed by external_crt0.S init to 100 MHz
+      fll_integrator.int_part    != 0x189) { // reset value 0x158 is changed by external_crt0.S init to 100 MHz
+    
     printf("FLL default values incorrect!\n");
+      #ifdef PRINT_FLL_DEFAULT_VAL_TEST
+        printf("================ FLL DEFAULT/INIT VALUES CHECK ================\n");
+        printf("fll_conf1.mult_factor (initval=0x17d7): %08x\n", fll_conf1.mult_factor);
+        printf("fll_conf1.dco_input (initval=0x18b): %08x\n", fll_conf1.dco_input);
+        printf("fll_conf1.clk_div (resval=0x002): %08x\n", fll_conf1.clk_div);
+        printf("fll_conf1.lock_enable (resval=0x001): %08x\n", fll_conf1.lock_enable);
+        printf("fll_conf1.op_mode (initval=0x001): %08x\n", fll_conf1.op_mode);
+        printf("fll_conf2.loop_gain (resval=0x008): %08x\n", fll_conf2.loop_gain);
+        printf("fll_conf2.deassert_cycles (resval=0x010): %08x\n", fll_conf2.deassert_cycles);
+        printf("fll_conf2.assert_cycles (initval=0x006): %08x\n", fll_conf2.assert_cycles);
+        printf("fll_conf2.lock_tolerance (initval=0x050): %08x\n", fll_conf2.lock_tolerance);
+        printf("fll_conf2.clk_sta_mode (resval=0x000): %08x\n", fll_conf2.clk_sta_mode);
+        printf("fll_conf2.open_loop_enable (resval=0x000): %08x\n", fll_conf2.open_loop_enable);
+        printf("fll_conf2.dithering_enable (resval=0x000): %08x\n", fll_conf2.dithering_enable);
+        printf("fll_integrator.frac_part (initval=0x058): %08x\n", fll_integrator.frac_part);
+        printf("fll_integrator.int_part (initval=0x189): %08x\n", fll_integrator.int_part);
+      #endif
   } else {
-    printf("FLL default values correct!\n");
+    printf("FLL default/init values correct!\n");
   }
 #endif
 
@@ -88,34 +88,50 @@ int main(void) {
   // dco_input >= 360 : freq = -1586.080 + 5.518*dco_input + -0.001191*(dco_input**2.0)
   // FLL Standalone mode (open loop) DCO input code ramp-down
 
-  uint32_t dco_input_default = fll_conf1.dco_input; // 344 => ~50MHz
+  uint32_t dco_input_default = 0x158; // dco input:0x158 (344) ~= 50MHz
 
-  for (int i = 0; i < (dco_input_default-272-4); ++i)
+  // Enable open loop mode
+  // fll_freq = fll_set_freq(&fll, 50000000);
+  fll_conf1.op_mode = 0;
+  fll_conf1_set(&fll, fll_conf1.raw);
+  fll_conf1.dco_input = dco_input_default;
+  fll_conf1_set(&fll, fll_conf1.raw);
+  // Small delay to let the FLL settle
+  for (int j = 0; j < 1000; j++) {
+    asm volatile("nop");
+  }
+  fll_freq_real = fll_get_freq(&fll);
+  soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
+  printf("OPEN LOOP: fll_freq real Hz = %d\n", fll_freq_real);
+
+  // DCO input code is filtered so the value is incremented by 10 to see a change in frequency
+  for (int i = 0; i < (dco_input_default-272-4); i+=10)
   {
     const uint32_t config1 = fll_create_config_1((fll_conf1_reg_t){
-        .mult_factor = fll_conf1.mult_factor,
-        .dco_input   = dco_input_default-i,
-        .clk_div     = fll_conf1.clk_div,
-        .lock_enable = fll_conf1.lock_enable,
-        .op_mode     = fll_conf1.op_mode
+      .mult_factor = fll_conf1.mult_factor,
+      .dco_input   = dco_input_default-i,
+      .clk_div     = fll_conf1.clk_div,
+      .lock_enable = fll_conf1.lock_enable,
+      .op_mode     = fll_conf1.op_mode
     });
     fll_conf1_set(&fll, config1);
     fll_status = fll_status_get(&fll);
+    // Small delay to let the FLL settle
+    for (int j = 0; j < 1000; j++) {
+      asm volatile("nop");
+    }
     // Update frequency in SoC controller otherwise devices using this value (e.g., uart) will not work
-    fll_freq = fll_get_freq(&fll); //(fll_status*REFERENCE_CLOCK_Hz)/fll_conf1.clk_div;
+    fll_freq = fll_get_freq(&fll);
     soc_ctrl_set_frequency(&soc_ctrl, fll_freq);
-    // DCO input code is filtered so changing it slowly does not immediatly change the frequency
-    printf("fll DCO input : %d\n", dco_input_default-i);
-    printf("fll_freq Hz   : %d\n", fll_freq);
+    printf("OPEN LOOP: fll DCO input = %d\n", dco_input_default-i);
+    printf("OPEN LOOP: fll_freq Hz   = %d\n", fll_freq);
   }
-  printf("FLL open loop mode working if you can read this!\n");
+  printf("FLL open loop mode working if you can read this and FLL frequency changed!\n");
 #endif // FLL_OPEN_LOOP_TEST
 
 
 #ifdef FLL_NORMAL_MODE_TEST
   printf("================ FLL NORMAL/LOCK MODE CHECK ================\n");
-  
-  uint32_t fll_freq_real;
 
   fll_freq = fll_init(&fll);
 
@@ -123,20 +139,20 @@ int main(void) {
 
   soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
 
-  printf("fll_freq request Hz: %d\n", fll_freq);
-  printf("fll_freq real Hz   : %d\n", fll_freq_real);
+  printf("NORMAL MODE: fll_freq request Hz = %d\n", fll_freq);
+  printf("NORMAL MODE: fll_freq real Hz    = %d\n", fll_freq_real);
 
-  // Set FLL to 100 MHz
-  fll_freq = fll_set_freq(&fll, 100000000);
+  // Set FLL to 250 MHz
+  fll_freq = fll_set_freq(&fll, 250000000);
 
   fll_freq_real = fll_get_freq(&fll);
 
   soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
 
-  printf("fll_freq request Hz: %d\n", fll_freq);
-  printf("fll_freq real Hz   : %d\n", fll_freq_real);
+  printf("NORMAL MODE: fll_freq request Hz = %d\n", fll_freq);
+  printf("NORMAL MODE: fll_freq real Hz    = %d\n", fll_freq_real);
 
-  printf("FLL normal mode working if you can read this!\n");
+  printf("FLL normal mode working if you can read this and FLL frequency changed!\n");
 
 #endif // FLL_NORMAL_MODE_TEST
 
