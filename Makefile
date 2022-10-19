@@ -52,6 +52,10 @@ questasim-sim-postsynth-opt:
 	fusesoc --cores-root . run --no-export --target=sim_postsynthesis --tool=modelsim $(FUSESOC_FLAGS) --setup --build eslepfl::heepocrates 2>&1 | tee buildsim.log
 	$(MAKE) -C build/eslepfl__heepocrates_0/sim_postsynthesis-modelsim/ opt
 
+questasim-sim-postsynth-opt-upf:
+	fusesoc --cores-root . run --no-export --target=sim_postsynthesis --tool=modelsim --flag=use_upf $(FUSESOC_FLAGS) --setup --build eslepfl::heepocrates 2>&1 | tee buildsim.log
+	$(MAKE) -C build/eslepfl__heepocrates_0/sim_postsynthesis-modelsim/ opt-upf
+
 synthesis: heepocrates-gen
 	cd implementation/synthesis/lc_shell/ && lc_shell -f mem_lib2db.tcl -batch;
 	cd implementation/synthesis/lc_shell/ && lc_shell -f fll_lib2db.tcl -batch;
