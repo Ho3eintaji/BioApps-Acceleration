@@ -53,7 +53,7 @@ questasim-sim-postsynth-opt:
 	$(MAKE) -C build/eslepfl__heepocrates_0/sim_postsynthesis-modelsim/ opt
 
 questasim-sim-postsynth-opt-upf:
-	fusesoc --cores-root . run --no-export --target=sim_postsynthesis --tool=modelsim --flag=use_upf $(FUSESOC_FLAGS) --setup --build eslepfl::heepocrates 2>&1 | tee buildsim.log
+	fusesoc --cores-root . run --no-export --target=sim_postsynthesis --tool=modelsim $(FUSESOC_FLAGS) --setup --build eslepfl::heepocrates 2>&1 | tee buildsim.log
 	$(MAKE) -C build/eslepfl__heepocrates_0/sim_postsynthesis-modelsim/ opt-upf
 
 synthesis: heepocrates-gen

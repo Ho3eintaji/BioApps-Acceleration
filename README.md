@@ -153,6 +153,13 @@ This shows the most important post synthesis waveforms.
 
 The simulation is very slow... `be patience`.
 
+For `UPF`:
+
+```
+make questasim-sim-postsynth-opt-upf  FUSESOC_FLAGS="--flag=use_upf"
+```
+
+
 ### Place and Route with Innovus
 
 Only if you are running on eslsrv:
