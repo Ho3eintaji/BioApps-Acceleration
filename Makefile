@@ -68,6 +68,9 @@ implementation/pnr/inputs/heepocrates.io:
 pnr: implementation/pnr/inputs/heepocrates.io
 	pushd implementation/pnr/ ; ./run_pnr_flow.csh; popd;
 
+pnr_debug: implementation/pnr/inputs/heepocrates.io
+	pushd implementation/pnr/ ; ./run_pnr_flow.csh debug; popd;
+
 # Display mcu_gen.py help
 mcu-gen-help:
 	cd hw/vendor/esl_epfl_x_heep && \
