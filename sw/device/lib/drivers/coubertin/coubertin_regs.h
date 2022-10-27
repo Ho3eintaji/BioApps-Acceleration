@@ -1,0 +1,1 @@
+../../../../../hw/vendor/esl_epfl_coubertin/hdl/coubertin_controller/sw/coubertin.h
