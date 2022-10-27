@@ -26,6 +26,10 @@ extern "C" {
 #define FLL_SIZE 0x${fll_size_address}
 #define FLL_END_ADDRESS (FLL_START_ADDRESS + FLL_SIZE)
 
+#define COUBERTIN_START_ADDRESS (EXT_PERIPHERAL_START_ADDRESS + 0x${coubertin_periph_start_address})
+#define COUBERTIN_SIZE 0x${coubertin_periph_size_address}
+#define COUBERTIN_END_ADDRESS (COUBERTIN_START_ADDRESS + FLL_SIZE)
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif  // __cplusplus
