@@ -67,5 +67,10 @@
     srli  a3, a3, FLL_CONFIG_1_CLK_DIV_OFFSET
     andi  a3, a3, FLL_CONFIG_1_CLK_DIV_MASK
     divu  a2, a2, a3
+    // We round the FLL frequency number before storing it to the soc_ctrl as the library
+    // requires round values for calculating the absolute time.
+    li    a3, 1000000
+    divu  a2, a2, a3
+    mul   a2, a2, a3
     sw    a2, SOC_CTRL_SYSTEM_FREQUENCY_HZ_REG_OFFSET(a0)
 #endif // TARGET_USE_FLL
