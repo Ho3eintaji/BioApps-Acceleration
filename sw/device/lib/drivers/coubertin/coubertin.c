@@ -29,3 +29,7 @@ volatile uint32_t coubertin_read_latency(const coubertin_t *coubertin) {
 volatile bool coubertin_read_ready(const coubertin_t *coubertin) {
   return mmio_region_get_bit32(coubertin->base_addr, (ptrdiff_t)(COUBERTIN_CONTROLLER_READY_REG_OFFSET), COUBERTIN_CONTROLLER_READY_READY_BIT);
 }
+
+volatile void coubertin_cg_disable(const coubertin_t *coubertin, bool disable) {
+  mmio_region_write32(coubertin->base_addr, (ptrdiff_t)(COUBERTIN_CONTROLLER_COUBERTIN_CLK_GATE_REG_OFFSET), !disable);
+}

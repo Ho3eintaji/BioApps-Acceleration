@@ -30,6 +30,7 @@ volatile void coubertin_write_saen(const coubertin_t *coubertin, int32_t reg_val
 volatile void coubertin_write_latency(const coubertin_t *coubertin, int32_t reg_val);
 volatile uint32_t coubertin_read_latency(const coubertin_t *coubertin);
 volatile bool coubertin_read_ready(const coubertin_t *coubertin);
+volatile void coubertin_cg_disable(const coubertin_t *coubertin, bool disable);
 
 #ifdef __cplusplus
 }
