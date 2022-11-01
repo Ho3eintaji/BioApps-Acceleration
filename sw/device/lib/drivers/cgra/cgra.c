@@ -98,3 +98,6 @@ uint32_t cgra_get_status(const cgra_t *cgra) {
   return mmio_region_read32(cgra->base_addr, (ptrdiff_t)(CGRA_COL_STATUS_REG_OFFSET));
 }
 
+void cgra_cg_disable(const cgra_t *cgra, bool disable) {
+  mmio_region_write32(cgra->base_addr, (ptrdiff_t)(CGRA_CGRA_CLK_GATE_REG_OFFSET), !disable);
+}

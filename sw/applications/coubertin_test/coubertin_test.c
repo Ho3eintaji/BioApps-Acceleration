@@ -37,6 +37,13 @@ int main(void) {
 
   while(coubertin_read_ready(&coubertin)==false){};
 
+  coubertin_cg_disable(&coubertin,true);
+
+  //Wait for sometime
+  for(int i=0;i<1000;i++) asm volatile("nop");
+
+  coubertin_cg_disable(&coubertin,false);
+  
   // Read memory output to r2
   coubertin_r0 = 0b00000000000000000011111111110000;
   coubertin_saen = 1;

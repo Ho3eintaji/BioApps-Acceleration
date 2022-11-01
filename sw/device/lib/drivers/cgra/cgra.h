@@ -128,6 +128,13 @@ uint32_t cgra_perf_cnt_get_col_stall(const cgra_t *cgra, uint8_t column_idx);
  */
 uint32_t cgra_get_status(const cgra_t *cgra);
 
+/**
+ * Active low clock gating of the CGRA (clock active at reset)
+ * @param cgra Pointer to cgra_t represting the target CGRA peripheral.
+ * @param disable disable(1)/enable(1) value
+ */
+void cgra_cg_disable(const cgra_t *cgra, bool disable);
+
 #ifdef __cplusplus
 }
 #endif
