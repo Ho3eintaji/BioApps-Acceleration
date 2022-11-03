@@ -27,3 +27,7 @@ implementation/synthesis/lc_shell/lc_output.txt
 
 # same for the C header file
 sw/device/lib/runtime/heepocrates.h
+hw/asic/mem_power_switches/db/*
+hw/asic/blade/db/*
+hw/asic/coubertin/db/*
+hw/asic/fll/db/*
