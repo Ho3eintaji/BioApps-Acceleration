@@ -156,7 +156,7 @@ The simulation is very slow... `be patience`.
 For `UPF`:
 
 ```
-make questasim-sim-postsynth-opt-upf  FUSESOC_FLAGS="--flag=use_upf"
+make questasim-sim-postsynth-opt-upf FUSESOC_FLAGS="--flag=use_upf"
 ```
 
 
