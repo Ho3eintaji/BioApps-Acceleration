@@ -66,6 +66,9 @@ synthesis: heepocrates-gen
 	cd hw/asic/mem_power_switches && tcsh compile_lib.csh;
 	fusesoc --cores-root . run --no-export --target=asic_synthesis --setup --build eslepfl::heepocrates 2>&1 | tee buildsim.log
 
+synthesis_script_only: heepocrates-gen
+	fusesoc --cores-root . run --no-export --target=asic_synthesis --setup eslepfl::heepocrates 2>&1 | tee buildsim.log
+
 implementation/pnr/inputs/heepocrates.io:
 	pushd implementation/pnr/inputs/ ; ./create_io_file_from_spreadsheet.py; popd;
 
