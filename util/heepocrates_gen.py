@@ -103,7 +103,8 @@ def main():
     coubertin_periph_start_address  = string2int(obj['ext_periph']['coubertin_periph']['offset'])
     coubertin_periph_size_address   = string2int(obj['ext_periph']['coubertin_periph']['length'])
 
-
+    heepocrates_ctrl_start_address  = string2int(obj['ext_periph']['heepocrates_ctrl']['offset'])
+    heepocrates_ctrl_size_address   = string2int(obj['ext_periph']['heepocrates_ctrl']['length'])
 
     kwargs = {
         "xbar_nmasters"                   : xbar_nmasters,
@@ -116,6 +117,8 @@ def main():
         "fll_size_address"                : fll_size_address,
         "coubertin_periph_start_address"  : coubertin_periph_start_address,
         "coubertin_periph_size_address"   : coubertin_periph_size_address,
+        "heepocrates_ctrl_start_address"  : heepocrates_ctrl_start_address,
+        "heepocrates_ctrl_size_address"   : heepocrates_ctrl_size_address,
     }
 
     ###########
