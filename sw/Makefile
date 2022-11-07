@@ -48,6 +48,7 @@ LIB_DRIVERS                += $(wildcard x_heep_device/lib/drivers/pad_control/*
 LIB_DRIVERS                += $(wildcard device/lib/drivers/cgra/*.c)
 LIB_DRIVERS                += $(wildcard device/lib/drivers/fll/*.c)
 LIB_DRIVERS                += $(wildcard device/lib/drivers/coubertin/*.c)
+LIB_DRIVERS                += $(wildcard device/lib/drivers/heepocrates_ctrl/*.c)
 INC_FOLDERS                = $(sort $(dir $(wildcard device/target/$(TARGET)/)))
 INC_FOLDERS                += $(sort $(dir $(wildcard x_heep_device/lib/drivers/*/)))
 INC_FOLDERS                += $(sort $(dir $(wildcard x_heep_device/lib/base/)))
@@ -475,10 +476,44 @@ applications/example_power_gating_all_domains/example_power_gating_all_domains.e
 		$^ $(LIB_RUNTIME) \
 		$(LIB_BASE) \
 		$(LIB_DRIVERS) \
+		-Wl,-Map=applications/mem_switch/main.map \
 		-L $(RISCV)/riscv32-unknown-elf/lib \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
 applications/example_power_gating_all_domains/example_power_gating_all_domains.flash_exec.elf: applications/example_power_gating_all_domains/example_power_gating_all_domains.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link_flash_exec.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT_FLASH_EXEC) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+applications/mem_switch/main.elf: applications/mem_switch/main.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-Wl,-Map=applications/mem_switch/main.map \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+applications/mem_switch/main.flash_exec.elf: applications/mem_switch/main.c
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
 		$(CUSTOM_GCC_FLAGS) \
 		-DHOST_BUILD \
