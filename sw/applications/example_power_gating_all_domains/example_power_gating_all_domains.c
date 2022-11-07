@@ -91,15 +91,22 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    // Power-gate CGRA
+    // Power-gate CGRA logic
     if (power_gate_external(&power_manager, 0, kOff_e, &power_manager_counters) != kPowerManagerOk_e)
     {
         printf("Error: power manager fail.\n");
         return EXIT_FAILURE;
     }
 
-    // Power-gate Coubertin
+    // Power-gate CGRA memories
     if (power_gate_external(&power_manager, 1, kOff_e, &power_manager_counters) != kPowerManagerOk_e)
+    {
+        printf("Error: power manager fail.\n");
+        return EXIT_FAILURE;
+    }
+
+    // Power-gate Coubertin
+    if (power_gate_external(&power_manager, 2, kOff_e, &power_manager_counters) != kPowerManagerOk_e)
     {
         printf("Error: power manager fail.\n");
         return EXIT_FAILURE;
@@ -168,15 +175,22 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    // Power-on CGRA
+    // Power-on CGRA logic
     if (power_gate_external(&power_manager, 0, kOn_e, &power_manager_counters) != kPowerManagerOk_e)
     {
         printf("Error: power manager fail.\n");
         return EXIT_FAILURE;
     }
 
-    // Power-on Coubertin
+    // Power-on CGRA memories
     if (power_gate_external(&power_manager, 1, kOn_e, &power_manager_counters) != kPowerManagerOk_e)
+    {
+        printf("Error: power manager fail.\n");
+        return EXIT_FAILURE;
+    }
+
+    // Power-on Coubertin
+    if (power_gate_external(&power_manager, 2, kOn_e, &power_manager_counters) != kPowerManagerOk_e)
     {
         printf("Error: power manager fail.\n");
         return EXIT_FAILURE;
