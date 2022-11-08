@@ -34,7 +34,7 @@ int main(void) {
 
   while(sw_cgra!=0xF) {  sw_cgra = heepocrates_ctrl_read_sw_monitor(&heepocrates_ctrl, (ptrdiff_t)(HEEPOCRATES_CTRL_CGRA_MEM_SW_MONITOR_REG_OFFSET)); }
 
-  while(sw_coubertin!=0x1) {  sw_coubertin = heepocrates_ctrl_read_sw_monitor(&heepocrates_ctrl, (ptrdiff_t)(HEEPOCRATES_CTRL_COUBERTIN_SW_MONITOR_REG_OFFSET)); }
+  while(sw_coubertin!=0x3) {  sw_coubertin = heepocrates_ctrl_read_sw_monitor(&heepocrates_ctrl, (ptrdiff_t)(HEEPOCRATES_CTRL_COUBERTIN_SW_MONITOR_REG_OFFSET)); }
 
   printf("sw: mem4 %x memcgra %x coubertin %x\n", sw_mem4, sw_cgra, sw_coubertin);
 
@@ -105,7 +105,7 @@ int main(void) {
 
   while(sw_cgra!=0xF) {  sw_cgra = heepocrates_ctrl_read_sw_monitor(&heepocrates_ctrl, (ptrdiff_t)(HEEPOCRATES_CTRL_CGRA_MEM_SW_MONITOR_REG_OFFSET)); }
 
-  while(sw_coubertin!=0x1) {  sw_coubertin = heepocrates_ctrl_read_sw_monitor(&heepocrates_ctrl, (ptrdiff_t)(HEEPOCRATES_CTRL_COUBERTIN_SW_MONITOR_REG_OFFSET)); }
+  while(sw_coubertin!=0x3) {  sw_coubertin = heepocrates_ctrl_read_sw_monitor(&heepocrates_ctrl, (ptrdiff_t)(HEEPOCRATES_CTRL_COUBERTIN_SW_MONITOR_REG_OFFSET)); }
 
   printf("sw: mem4 %x memcgra %x coubertin %x\n", sw_mem4, sw_cgra, sw_coubertin);
 
