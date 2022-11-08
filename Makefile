@@ -20,7 +20,6 @@
 ############################################################################################################################
 mcu-gen:
 	cd hw/vendor/esl_epfl_x_heep && \
-	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir ../../../tb --external_domains 2 --pkg-sv ../../../tb/heepocrates_testharness.sv.tpl && \
 	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir hw/core-v-mini-mcu/include --cpu cv32e20 --bus NtoM --memorybanks 10 --external_domains 3 --pkg-sv hw/core-v-mini-mcu/include/core_v_mini_mcu_pkg.sv.tpl  --external_pads ../../../heepocrates_pad.hjson && \
 	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir hw/core-v-mini-mcu/ --memorybanks 10 --external_domains 3 --tpl-sv hw/core-v-mini-mcu/system_bus.sv.tpl  && \
 	python util/mcu_gen.py --cfg mcu_cfg.hjson --outdir hw/core-v-mini-mcu/ --external_domains 3 --tpl-sv hw/core-v-mini-mcu/core_v_mini_mcu.sv.tpl && \
