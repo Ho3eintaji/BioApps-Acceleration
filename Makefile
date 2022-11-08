@@ -74,10 +74,10 @@ synthesis: heepocrates-gen
 	cd implementation/synthesis/lc_shell/ && lc_shell -f fll_lib2db.tcl -batch;
 	cd implementation/synthesis/lc_shell/ && lc_shell -f blade_lib2db.tcl -batch;
 	cd hw/asic/mem_power_switches && tcsh compile_lib.csh;
-	fusesoc --cores-root . run --no-export --target=asic_synthesis --setup --build eslepfl::heepocrates 2>&1 | tee buildsim.log
+	fusesoc --cores-root . run --no-export --target=asic_synthesis --setup --build eslepfl::heepocrates 2>&1 | tee builddc.log
 
 synthesis_script_only: heepocrates-gen
-	fusesoc --cores-root . run --no-export --target=asic_synthesis --setup eslepfl::heepocrates 2>&1 | tee buildsim.log
+	fusesoc --cores-root . run --no-export --target=asic_synthesis --setup eslepfl::heepocrates 2>&1 | tee builddc.log
 
 implementation/pnr/inputs/heepocrates.io:
 	pushd implementation/pnr/inputs/ ; ./create_io_file_from_spreadsheet.py; popd;
