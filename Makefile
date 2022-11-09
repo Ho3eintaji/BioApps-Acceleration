@@ -78,6 +78,9 @@ synthesis: heepocrates-gen
 synthesis_script_only: heepocrates-gen
 	fusesoc --cores-root . run --no-export --target=asic_synthesis --setup eslepfl::heepocrates 2>&1 | tee builddc.log
 
+synthesis_script_only: heepocrates-gen
+	fusesoc --cores-root . run --no-export --target=asic_synthesis --setup eslepfl::heepocrates 2>&1 | tee buildsim.log
+
 implementation/pnr/inputs/heepocrates.io:
 	pushd implementation/pnr/inputs/ ; ./create_io_file_from_spreadsheet.py; popd;
 
@@ -109,3 +112,7 @@ clean-app:
 
 clean-pnr-io:
 	rm -f implementation/pnr/inputs/heepocrates.io
+
+conda-env:
+	conda update conda
+	conda env create -f environment.yml	
