@@ -562,6 +562,57 @@ applications/pad_mux_test/pad_mux_test.flash_exec.elf: applications/pad_mux_test
 		-L $(RISCV)/riscv32-unknown-elf/lib \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
+applications/coubertin_basic_op/coubertin_basic_op.elf: applications/coubertin_basic_op/coubertin_basic_op.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-Wl,-Map=applications/coubertin_test/coubertin_test.map \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+applications/coubertin_addition/coubertin_addition.elf: applications/coubertin_addition/coubertin_addition.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-Wl,-Map=applications/coubertin_test/coubertin_test.map \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+applications/coubertin_multiplication/coubertin_multiplication.elf: applications/coubertin_multiplication/coubertin_multiplication.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-Wl,-Map=applications/coubertin_test/coubertin_test.map \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
 clean:
 	rm -rf applications/*/*.elf \
 	rm -rf applications/*/*.hex \
