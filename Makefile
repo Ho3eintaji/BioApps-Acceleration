@@ -113,3 +113,7 @@ clean-app:
 
 clean-pnr-io:
 	rm -f implementation/pnr/inputs/heepocrates.io
+
+conda-env:
+	conda update conda
+	conda env create -f environment.yml	
