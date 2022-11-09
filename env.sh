@@ -7,7 +7,6 @@ export MTI_VCO_MODE=64
 # RISC-V compiler
 export RISCV=/shares/eslfiler1/apps/linux/Development/rv32imc
 
-
 # Xilinx Vivado
 export XILINX_VIVADO="/softs/xilinx/vivado/2020.2_lin64/"
 export PATH="$XILINX_VIVADO/bin:/edadk_repo/softs/xilinx/DocNav:$PATH"
@@ -24,3 +23,7 @@ export SYNOPSYS=/softs/synopsys/dc/2020.09
 export MANPATH=/softs/synopsys/dc/2020.09/doc/dc/man
 export SNPS_DC_VERS=2020.9
 export PATH=/softs/synopsys/site/bin:/softs/synopsys/sold:/softs/synopsys/dc/2020.09/bin:/softs/synopsys/lc/2020.09/bin/:$PATH
+
+# Calibre
+export PATH=/softs/mentor/calibre/2022.2/bin/:$PATH
+
