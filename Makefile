@@ -121,4 +121,4 @@ clean-pnr-io:
 
 conda-env:
 	conda update conda
-	conda env create -f environment.yml	
+	conda env create -f environment.yml
