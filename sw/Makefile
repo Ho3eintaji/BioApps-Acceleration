@@ -58,9 +58,11 @@ INC_FOLDERS                += $(sort $(dir $(wildcard device/lib/drivers/*/)))
 INC_FOLDERS                += $(sort $(dir $(wildcard device/lib/runtime/)))
 INC_FOLDERS_GCC             = $(addprefix -I ,$(INC_FOLDERS))
 
-# rules to generate hex (loadable by simulators) from elf
+# Rules to generate hex (loadable by simulators) from elf
+
+# We keep the same name to be transparent but we create an Srecord file when booting with jtag
 %.hex: %.elf
-	$(RISCV_EXE_PREFIX)objcopy -O verilog $< $@
+	$(RISCV_EXE_PREFIX)objcopy --srec-forceS3 --srec-len 1 -O srec $^ $@
 
 %.flash_exec.hex: %.flash_exec.elf
 	$(RISCV_EXE_PREFIX)objcopy -O verilog --adjust-vma=-0x40000000 $< $@

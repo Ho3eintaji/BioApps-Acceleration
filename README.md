@@ -33,8 +33,20 @@ Don't forget to set the `RISCV` env variable to the compiler folder (without the
 
 Then go to the `./sw` folder and type:
 
+For jtag booting (loading memory from jtag):
+
 ```
 make x_applications/hello_world/hello_world.hex
+```
+
+For executing from flash:
+```
+make x_applications/hello_world/hello_world.flash_exec.hex
+```
+
+For loading from flash to memory:
+```
+make x_applications/hello_world/hello_world.flash_load.hex
 ```
 
 This will create the executable file to be loaded in your target system (ASIC, FPGA, Simulation).
@@ -73,7 +85,20 @@ and type to run your compiled software:
 make run RUN_OPT=1 PLUSARGS="c firmware=../../../sw/x_applications/hello_world/hello_world.hex"
 ```
 
-or if you want to bypass the FLL:
+or if you want to execute from flash:
+
+```
+make run RUN_OPT=1 PLUSARGS="c firmware=../../../sw/x_applications/hello_world/hello_world.flash_exec.hex boot_sel=1"
+```
+
+or if you want to load from flash:
+
+```
+make run RUN_OPT=1 PLUSARGS="c firmware=../../../sw/x_applications/hello_world/hello_world.flash_load.hex boot_sel=1 execute_from_flash=0"
+```
+
+
+If you want to bypass the FLL:
 
 ```
 make run RUN_OPT=1 PLUSARGS="c firmware=../../../sw/x_applications/hello_world/hello_world.hex bypass_fll=1"
@@ -101,8 +126,8 @@ The output of the UART DPI module is printed in the `uart0.log` file in the simu
 For example, to see the "hello world!" output of the Verilator simulation:
 
 ```
-cd ./build/eslepfl__heepocrates_0/sim-verilator
-./Vheepocrates_testharness +firmware=../../../sw/applications/hello_blade/hello_blade.hex
+cd ./build/eslepfl__heepocrates_0/sim-modelsim
+make run PLUSARGS="c firmware=../../../sw/x_applications/hello_world/hello_world.hex"
 cat uart0.log
 ```
 ### Synthesis with Synopsys Design Compiler
@@ -135,6 +160,20 @@ cd ./build/eslepfl__heepocrates_0/sim_postsynthesis-modelsim/
 ```
 
 and type to run your compiled software:
+
+to boot with jtag:
+
+```
+make run RUN_OPT=1 PLUSARGS="c firmware=../../../sw/x_applications/hello_world/hello_world.hex"
+```
+
+or to execute from flash:
+
+```
+make run RUN_OPT=1 PLUSARGS="c firmware=../../../sw/x_applications/hello_world/hello_world.flash_exec.hex boot_sel=1"
+```
+
+or to load from flash to memory:
 
 ```
 make run RUN_OPT=1 PLUSARGS="c firmware=../../../sw/x_applications/hello_world/hello_world.flash_load.hex boot_sel=1 execute_from_flash=0"
