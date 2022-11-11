@@ -80,16 +80,6 @@ int main(int argc, char *argv[])
         printf("Error: power manager fail.\n");
         return EXIT_FAILURE;
     }
-    if (power_gate_ram_block(&power_manager, 8, kOff_e, &power_manager_counters) != kPowerManagerOk_e)
-    {
-        printf("Error: power manager fail.\n");
-        return EXIT_FAILURE;
-    }
-    if (power_gate_ram_block(&power_manager, 9, kOff_e, &power_manager_counters) != kPowerManagerOk_e)
-    {
-        printf("Error: power manager fail.\n");
-        return EXIT_FAILURE;
-    }
 
     // Power-gate CGRA logic
     if (power_gate_external(&power_manager, 0, kOff_e, &power_manager_counters) != kPowerManagerOk_e)
@@ -164,17 +154,7 @@ int main(int argc, char *argv[])
         printf("Error: power manager fail.\n");
         return EXIT_FAILURE;
     }
-    if (power_gate_ram_block(&power_manager, 8, kOn_e, &power_manager_counters) != kPowerManagerOk_e)
-    {
-        printf("Error: power manager fail.\n");
-        return EXIT_FAILURE;
-    }
-    if (power_gate_ram_block(&power_manager, 9, kOn_e, &power_manager_counters) != kPowerManagerOk_e)
-    {
-        printf("Error: power manager fail.\n");
-        return EXIT_FAILURE;
-    }
-
+ 
     // Power-on CGRA logic
     if (power_gate_external(&power_manager, 0, kOn_e, &power_manager_counters) != kPowerManagerOk_e)
     {

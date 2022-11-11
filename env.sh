@@ -24,6 +24,4 @@ export MANPATH=/softs/synopsys/dc/2020.09/doc/dc/man
 export SNPS_DC_VERS=2020.9
 export PATH=/softs/synopsys/site/bin:/softs/synopsys/sold:/softs/synopsys/dc/2020.09/bin:/softs/synopsys/lc/2020.09/bin/:$PATH
 
-# Calibre
-export PATH=/softs/mentor/calibre/2022.2/bin/:$PATH
 
