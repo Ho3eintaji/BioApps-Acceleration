@@ -84,13 +84,13 @@ synthesis_script_only: heepocrates-gen
 implementation/pnr/inputs/heepocrates.io:
 	pushd implementation/pnr/inputs/ ; ./create_io_file_from_spreadsheet.py; popd;
 
-hw/asic/fll/gds_merged/fll.gds:
+hw/asic/fll/gds_merged/tsmc65_FLL.gds:
 	pushd hw/asic/fll/gds_merged/; ./merge_fll.csh; popd;
 
-pnr: implementation/pnr/inputs/heepocrates.io hw/asic/fll/gds_merged/fll.gds
+pnr: implementation/pnr/inputs/heepocrates.io hw/asic/fll/gds_merged/tsmc65_FLL.gds
 	pushd implementation/pnr/ ; ./run_pnr_flow.csh; popd;
 
-pnr_debug: implementation/pnr/inputs/heepocrates.io hw/asic/fll/gds_merged/fll.gds
+pnr_debug: implementation/pnr/inputs/heepocrates.io hw/asic/fll/gds_merged/tsmc65_FLL.gds
 	pushd implementation/pnr/ ; ./run_pnr_flow.csh debug; popd;
 
 # Display mcu_gen.py help
