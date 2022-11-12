@@ -218,7 +218,7 @@ where the power switches are physically connected to your netlist.
 To do so:
 
 ```
-questasim-sim-postfloorplan-opt
+make questasim-sim-postfloorplan-opt
 ```
 then, go to your target system built folder
 
@@ -242,7 +242,7 @@ Note that you are still simulating the `verilog` of the `hard` macros as:
 To do so:
 
 ```
-questasim-sim-postlayout-opt
+make questasim-sim-postlayout-opt
 ```
 then, go to your target system built folder
 
