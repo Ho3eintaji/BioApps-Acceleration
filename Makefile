@@ -60,9 +60,9 @@ questasim-sim-postsynth-opt:
 	fusesoc --cores-root . run --no-export --target=sim_postsynthesis --tool=modelsim $(FUSESOC_FLAGS) --setup --build eslepfl::heepocrates 2>&1 | tee buildsim.log
 	$(MAKE) -C build/eslepfl__heepocrates_0/sim_postsynthesis-modelsim/ opt
 
-questasim-sim-postsynth-opt-upf:
-	fusesoc --cores-root . run --no-export --target=sim_postsynthesis --tool=modelsim $(FUSESOC_FLAGS) --setup --build eslepfl::heepocrates 2>&1 | tee buildsim.log
-	$(MAKE) -C build/eslepfl__heepocrates_0/sim_postsynthesis-modelsim/ opt-upf
+questasim-sim-postfloorplan-opt:
+	fusesoc --cores-root . run --no-export --target=sim_postlayout --tool=modelsim --flag=use_fp_netlist $(FUSESOC_FLAGS) --setup --build eslepfl::heepocrates 2>&1 | tee buildsim.log
+	$(MAKE) -C build/eslepfl__heepocrates_0/sim_postlayout-modelsim/ opt
 
 questasim-sim-postlayout-opt:
 	fusesoc --cores-root . run --no-export --target=sim_postlayout --tool=modelsim $(FUSESOC_FLAGS) --setup --build eslepfl::heepocrates 2>&1 | tee buildsim.log
