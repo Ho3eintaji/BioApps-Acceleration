@@ -183,7 +183,6 @@ If you want to debug it with the `gui`, as I strongly encourage, once inside `Qu
 
 
 ```
-VSIM > do ../../../scripts/sim/No_NumericStdNoWarnings.tcl
 VSIM > do ../../../scripts/sim/waves_postsynth.do
 ```
 
@@ -192,11 +191,7 @@ This shows the most important post synthesis waveforms.
 
 The simulation is very slow... `be patience`.
 
-For `UPF`:
-
-```
-make questasim-sim-postsynth-opt-upf FUSESOC_FLAGS="--flag=use_upf"
-```
+`UPF` simulation post-synthesis is not supported
 
 
 ### Place and Route with Innovus
@@ -204,12 +199,55 @@ make questasim-sim-postsynth-opt-upf FUSESOC_FLAGS="--flag=use_upf"
 Only if you are running on eslsrv:
 
 ```
+make pnr_floorplan
+```
+
+for only creating the floorplan of `heepocrates`, otheriwise
+
+```
 make pnr
 ```
 
-This relies on the [Google Sheet](https://docs.google.com/spreadsheets/d/1R42f33qJquhNsswMwyr-gp6fZFzjrIKRiU6ttj8dK-8/edit#gid=1605553209) that contains the IO and on the synthesized
-`netlist`.
+This relies on the [Google Sheet](https://docs.google.com/spreadsheets/d/1R42f33qJquhNsswMwyr-gp6fZFzjrIKRiU6ttj8dK-8/edit#gid=1605553209) that contains the IO and on the synthesized `netlist`.
 
-### Postpnr Simulation for Questasim
+### Postfloorplan Simulation for Questasim
 
-`to do done`.
+To `verify` whether your power domains that you specified correctly, you must run at least post-floorplan simulation,
+where the power switches are physically connected to your netlist.
+
+To do so:
+
+```
+questasim-sim-postfloorplan-opt
+```
+then, go to your target system built folder
+
+```
+cd ./build/eslepfl__heepocrates_0/sim_postlayout-modelsim/
+```
+
+and follow what was described above for the post-synthesis simulation.
+
+### PostPnR Simulation for Questasim
+
+To `verify` whether your your netlist has been placed and routed correctly, and no setup, nor hold violations are still present,
+you must simulate the netlist with back-annotated `timing` (`SDF`) information.
+Note that you are still simulating the `verilog` of the `hard` macros as:
+
+- `memories from ARM`
+- `FLL from ETH`
+- `memory switch cells from us`
+- `coubertin from us`
+
+To do so:
+
+```
+questasim-sim-postlayout-opt
+```
+then, go to your target system built folder
+
+```
+cd ./build/eslepfl__heepocrates_0/sim_postlayout-modelsim/
+```
+
+and follow what was described above for the post-synthesis simulation.
