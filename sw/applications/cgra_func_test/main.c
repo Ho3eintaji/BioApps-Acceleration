@@ -8,6 +8,7 @@
 #include "rv_plic.h"
 #include "rv_plic_regs.h"
 #include "heepocrates.h"
+#include "heepocrates_ctrl.h"
 #include "cgra.h"
 #include "cgra_bitstream.h"
 #include "fxp.h"
@@ -85,6 +86,10 @@ int main(void) {
   const uint32_t mask = 1 << 11;//IRQ_EXT_ENABLE_OFFSET;
   CSR_SET_BITS(CSR_REG_MIE, mask);
   cgra_intr_flag = 0;
+
+  heepocrates_ctrl_t heepocrates_ctrl;
+  heepocrates_ctrl.base_addr = mmio_region_from_addr((uintptr_t)HEEPOCRATES_CTRL_START_ADDRESS);
+  heepocrates_ctrl_cgra_disable(&heepocrates_ctrl, 0);
 
   cgra_t cgra;
   cgra.base_addr = mmio_region_from_addr((uintptr_t)CGRA_PERIPH_START_ADDRESS);
