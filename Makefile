@@ -87,10 +87,13 @@ implementation/pnr/inputs/heepocrates.io:
 hw/asic/fll/gds_merged/tsmc65_FLL.gds:
 	pushd hw/asic/fll/gds_merged/; ./merge_fll.csh; popd;
 
-pnr: implementation/pnr/inputs/heepocrates.io hw/asic/fll/gds_merged/tsmc65_FLL.gds
+implementation/pnr/inputs/gds2.map:
+	pushd implementation/pnr/inputs/; /dkits/tsmc/65nm/IP_65nm/LP/IP_FE_BE/Back_End/lef/tcbn65lphvt_200a/techfiles/gds2map.sh -layer 9 -top 2; popd;
+
+pnr: implementation/pnr/inputs/heepocrates.io hw/asic/fll/gds_merged/tsmc65_FLL.gds implementation/pnr/inputs/gds2.map
 	pushd implementation/pnr/ ; ./run_pnr_flow.csh; popd;
 
-pnr_debug: implementation/pnr/inputs/heepocrates.io hw/asic/fll/gds_merged/tsmc65_FLL.gds
+pnr_debug: implementation/pnr/inputs/heepocrates.io hw/asic/fll/gds_merged/tsmc65_FLL.gds implementation/pnr/inputs/gds2.map
 	pushd implementation/pnr/ ; ./run_pnr_flow.csh debug; popd;
 
 # Display mcu_gen.py help
