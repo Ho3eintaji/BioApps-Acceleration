@@ -25,6 +25,13 @@ typedef struct heepocrates_ctrl {
 
 volatile uint32_t heepocrates_ctrl_read_sw_monitor(const heepocrates_ctrl_t *heepocrates_ctrl, ptrdiff_t reg_offset);
 
+/**
+ * Active low clock gating of the CGRA (clock active at reset)
+ * @param heepocrates_ctrl Pointer to heepocrates_ctrl_t represting the target heepocrates controller peripheral.
+ * @param disable disable(1)/enable(0) value
+ */
+void heepocrates_ctrl_cgra_disable(const heepocrates_ctrl_t *heepocrates_ctrl, bool disable);
+
 
 #ifdef __cplusplus
 }
