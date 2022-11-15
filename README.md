@@ -250,4 +250,15 @@ then, go to your target system built folder
 cd ./build/eslepfl__heepocrates_0/sim_postlayout-modelsim/
 ```
 
-and follow what was described above for the post-synthesis simulation.
+Once you open `questasim`, you need to disable timing checks on asynchronous paths,
+
+so first thing to do is running the following script:
+
+```
+VSIM > do ../../../scripts/sim/asynch_ff_postlayout_disable.do
+```
+
+The script is not `complete`, not exaustive, not elegant, but works given the short time
+we have to verify, after the `TAPEOUT` we must re-script this to avoid issues during post-tapeout verification.
+
+After this, follow what was described above for the post-synthesis simulation.
