@@ -23,6 +23,7 @@ int main(int argc, char *argv[])
     mmio_region_t power_manager_reg = mmio_region_from_addr(POWER_MANAGER_START_ADDRESS);
     power_manager.base_addr = power_manager_reg;
     power_manager_counters_t power_manager_counters;
+    power_manager_counters_t power_manager_counters_cpu;
 
     // Get current Frequency
     soc_ctrl_t soc_ctrl;
@@ -36,7 +37,13 @@ int main(int argc, char *argv[])
     rv_timer_approximate_tick_params(freq_hz, kTickFreqHz, &tick_params);
 
     // Init cpu_subsystem's counters
-    if (power_gate_counters_init(&power_manager_counters, 40, 40, 30, 30, 20, 20, 0, 0) != kPowerManagerOk_e)
+    if (power_gate_counters_init(&power_manager_counters, 0, 0, 0, 0, 0, 0, 0, 0) != kPowerManagerOk_e)
+    {
+        printf("Error: power manager fail. Check the reset and powergate counters value\n");
+        return EXIT_FAILURE;
+    }
+
+    if (power_gate_counters_init(&power_manager_counters_cpu, 40, 40, 30, 30, 20, 20, 0, 0) != kPowerManagerOk_e)
     {
         printf("Error: power manager fail. Check the reset and powergate counters value\n");
         return EXIT_FAILURE;
@@ -109,7 +116,7 @@ int main(int argc, char *argv[])
     rv_timer_counter_set_enabled(&timer_0_1, 0, kRvTimerEnabled);
 
     CSR_CLEAR_BITS(CSR_REG_MSTATUS, 0x8);
-    if (power_gate_core(&power_manager, kTimer_0_pm_e, &power_manager_counters) != kPowerManagerOk_e)
+    if (power_gate_core(&power_manager, kTimer_0_pm_e, &power_manager_counters_cpu) != kPowerManagerOk_e)
     {
         printf("Error: power manager fail.\n");
         return EXIT_FAILURE;
