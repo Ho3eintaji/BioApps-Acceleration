@@ -255,7 +255,7 @@ cd ./build/eslepfl__heepocrates_0/sim_postlayout-modelsim/
 so first thing to do is running the following script:
 
 ```
-VSIM > do ../../../scripts/sim/asynch_ff_postlayout_disable.do
+VSIM > do ../../../scripts/sim/asynch_ff_postlayout_disable.tcl
 ```
 
 The script is not `complete`, not exaustive, not elegant, but works given the short time
