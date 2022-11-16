@@ -262,3 +262,19 @@ The script is not `complete`, not exaustive, not elegant, but works given the sh
 we have to verify, after the `TAPEOUT` we must re-script this to avoid issues during post-tapeout verification.
 
 After this, follow what was described above for the post-synthesis simulation.
+
+### RUN SAMPLE APPS
+
+To simulate all sample applications at once using Questasim, run the following command:
+
+if you want to simulate the rtl
+
+```
+source run_verif.sh rtl
+```
+
+if you want to simulate the netlist post-synthesis
+
+```
+source run_verif.sh syn
+```
