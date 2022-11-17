@@ -12,7 +12,6 @@ then
     upf="RUN_UPF=1"
 elif [[ $1 = "syn" ]]
 then
-    # make synthesis
     type="syn"
     fusesoc="questasim-sim-postsynth-opt"
     fusesoc_flags="--flag=use_external_device_example"
@@ -27,7 +26,10 @@ fi
 make $fusesoc FUSESOC_FLAGS="${fusesoc_flags}"
 
 # Open output file
-rm run_verif_${type}_log.txt
+if test -f "run_verif_${type}_log.txt";
+then
+    rm run_verif_${type}_log.txt
+fi
 touch run_verif_${type}_log.txt
 echo -e "APPLICATIONS OUTPUT:\n\n" >> ./run_verif_${type}_log.txt
 
