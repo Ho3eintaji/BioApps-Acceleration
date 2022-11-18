@@ -81,7 +81,7 @@ synthesis_script_only: heepocrates-gen
 synthesis_script_only: heepocrates-gen
 	fusesoc --cores-root . run --no-export --target=asic_synthesis --setup eslepfl::heepocrates 2>&1 | tee buildsim.log
 
-implementation/pnr/inputs/heepocrates.io:
+heepocrates-io-gen:
 	pushd implementation/pnr/inputs/ ; ./create_io_file_from_spreadsheet.py; popd;
 
 hw/asic/fll/gds_merged/tsmc65_FLL.gds:
@@ -90,10 +90,10 @@ hw/asic/fll/gds_merged/tsmc65_FLL.gds:
 implementation/pnr/inputs/gds2.map:
 	pushd implementation/pnr/inputs/; /dkits/tsmc/65nm/IP_65nm/LP/IP_FE_BE/Back_End/lef/tcbn65lphvt_200a/techfiles/gds2map.sh -layer 9 -top 2; popd;
 
-pnr: implementation/pnr/inputs/heepocrates.io hw/asic/fll/gds_merged/tsmc65_FLL.gds implementation/pnr/inputs/gds2.map
+pnr: heepocrates-io-gen hw/asic/fll/gds_merged/tsmc65_FLL.gds implementation/pnr/inputs/gds2.map
 	pushd implementation/pnr/ ; ./run_pnr_flow.csh; popd;
 
-pnr_debug: implementation/pnr/inputs/heepocrates.io hw/asic/fll/gds_merged/tsmc65_FLL.gds implementation/pnr/inputs/gds2.map
+pnr_debug: heepocrates-io-gen hw/asic/fll/gds_merged/tsmc65_FLL.gds implementation/pnr/inputs/gds2.map
 	pushd implementation/pnr/ ; ./run_pnr_flow.csh debug; popd;
 
 # Display mcu_gen.py help
