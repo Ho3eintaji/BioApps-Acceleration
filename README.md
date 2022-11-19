@@ -247,7 +247,7 @@ make questasim-sim-postlayout-opt
 then, go to your target system built folder
 
 ```
-cd ./build/eslepfl__heepocrates_0/sim_postlayout-modelsim/
+cd ./build/eslepfl__heepocrates_0/sim_postlayout_timing-modelsim/
 ```
 
 `Only` if you execute it with the gui opened, (i.e. `make run-gui` ...), once you open `questasim`, you need to disable timing checks on asynchronous paths,
