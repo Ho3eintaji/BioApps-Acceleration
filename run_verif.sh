@@ -163,9 +163,9 @@ echo -e "\n" >> ./run_verif_${type}_log.txt
 # Run test_dma_power_gating application
 echo -e "Run test_dma_power_gating application...\n" >> ./run_verif_${type}_log.txt
 cd sw/
-make clean x_applications/test_dma_power_gating/test_dma_power_gating.hex
+make clean applications/test_dma_power_gating/test_dma_power_gating.hex
 cd ../build/eslepfl__heepocrates_0/${sim_folder}/
-make run RUN_OPT=1 PLUSARGS="c firmware=../../../sw/x_applications/test_dma_power_gating/test_dma_power_gating.hex" ${upf}
+make run RUN_OPT=1 PLUSARGS="c firmware=../../../sw/applications/test_dma_power_gating/test_dma_power_gating.hex" ${upf}
 cat uart0.log >> ../../../run_verif_${type}_log.txt
 cd ../../../
 echo -e "\n" >> ./run_verif_${type}_log.txt
@@ -183,9 +183,9 @@ echo -e "\n" >> ./run_verif_${type}_log.txt
 # Run test_gpio_ao_power_gating application
 echo -e "Run test_gpio_ao_power_gating application...\n" >> ./run_verif_${type}_log.txt
 cd sw/
-make clean x_applications/test_gpio_ao_power_gating/test_gpio_ao_power_gating.hex
+make clean applications/test_gpio_ao_power_gating/test_gpio_ao_power_gating.hex
 cd ../build/eslepfl__heepocrates_0/${sim_folder}/
-make run RUN_OPT=1 PLUSARGS="c firmware=../../../sw/x_applications/test_gpio_ao_power_gating/test_gpio_ao_power_gating.hex" ${upf}
+make run RUN_OPT=1 PLUSARGS="c firmware=../../../sw/applications/test_gpio_ao_power_gating/test_gpio_ao_power_gating.hex" ${upf}
 cat uart0.log >> ../../../run_verif_${type}_log.txt
 cd ../../../
 echo -e "\n" >> ./run_verif_${type}_log.txt
@@ -193,9 +193,9 @@ echo -e "\n" >> ./run_verif_${type}_log.txt
 # Run test_gpio_power_gating application
 echo -e "Run test_gpio_power_gating application...\n" >> ./run_verif_${type}_log.txt
 cd sw/
-make clean x_applications/test_gpio_power_gating/test_gpio_power_gating.hex
+make clean applications/test_gpio_power_gating/test_gpio_power_gating.hex
 cd ../build/eslepfl__heepocrates_0/${sim_folder}/
-make run RUN_OPT=1 PLUSARGS="c firmware=../../../sw/x_applications/test_gpio_power_gating/test_gpio_power_gating.hex" ${upf}
+make run RUN_OPT=1 PLUSARGS="c firmware=../../../sw/applications/test_gpio_power_gating/test_gpio_power_gating.hex" ${upf}
 cat uart0.log >> ../../../run_verif_${type}_log.txt
 cd ../../../
 echo -e "\n" >> ./run_verif_${type}_log.txt
