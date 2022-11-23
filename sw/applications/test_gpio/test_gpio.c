@@ -100,14 +100,13 @@ int main(int argc, char *argv[])
     while(external_intr_flag==0) {
         wait_for_interrupt();
     }
-    printf("Success\n");
-
     plic_res = dif_plic_irq_complete(&rv_plic, 0, &intr_num);
     if (plic_res != kDifPlicOk) {
-        printf("Failed\n;");
+        printf("Fail.\n;");
         return -1;
     }
-    printf("Done...");
+
+    printf("Success.\n");
 
     return EXIT_SUCCESS;
 }
