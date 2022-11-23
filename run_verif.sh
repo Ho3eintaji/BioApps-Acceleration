@@ -170,15 +170,15 @@ cat uart0.log >> ../../../run_verif_${type}_log.txt
 cd ../../../
 echo -e "\n" >> ./run_verif_${type}_log.txt
 
-# # Run spi_host_dma_power_gate_example application (load from flash)
-# echo -e "Run spi_host_dma_power_gate_example application (load from flash)...\n" >> ./run_verif_${type}_log.txt
-# cd sw/
-# make clean x_applications/spi_host_dma_power_gate_example/spi_host_dma_power_gate_example.flash_load.hex
-# cd ../build/eslepfl__heepocrates_0/${sim_folder}/
-# make run RUN_OPT=1 PLUSARGS="c firmware=../../../sw/x_applications/spi_host_dma_power_gate_example/spi_host_dma_power_gate_example.flash_load.hex boot_sel=1 execute_from_flash=0" ${upf}
-# cat uart0.log >> ../../../run_verif_${type}_log.txt
-# cd ../../../
-# echo -e "\n" >> ./run_verif_${type}_log.txt
+# Run spi_host_dma_power_gate_example application (load from flash)
+echo -e "Run spi_host_dma_power_gate_example application (load from flash)...\n" >> ./run_verif_${type}_log.txt
+cd sw/
+make clean x_applications/spi_host_dma_power_gate_example/spi_host_dma_power_gate_example.flash_load.hex
+cd ../build/eslepfl__heepocrates_0/${sim_folder}/
+make run RUN_OPT=1 PLUSARGS="c firmware=../../../sw/x_applications/spi_host_dma_power_gate_example/spi_host_dma_power_gate_example.flash_load.hex boot_sel=1 execute_from_flash=0" ${upf}
+cat uart0.log >> ../../../run_verif_${type}_log.txt
+cd ../../../
+echo -e "\n" >> ./run_verif_${type}_log.txt
 
 # Run test_gpio_ao_power_gating application
 echo -e "Run test_gpio_ao_power_gating application...\n" >> ./run_verif_${type}_log.txt
