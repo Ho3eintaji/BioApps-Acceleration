@@ -29,7 +29,7 @@ CUSTOM_GCC_FLAGS           =
 
 LIB_CRT                    = $(wildcard x_heep_device/lib/crt/*.S)
 LIB_CRT_FLASH_EXEC         = $(wildcard x_heep_device/lib/crt_flash_exec/*.S)
-LIB_CRT_FLASH_LOAD            = $(wildcard x_heep_device/lib/crt_flash_load/*.S)
+LIB_CRT_FLASH_LOAD         = $(wildcard x_heep_device/lib/crt_flash_load/*.S)
 LIB_BASE                   = $(wildcard x_heep_device/lib/base/*.c)
 LIB_BASE_FREESTD           = x_heep_device/lib/base/freestanding
 LIB_RUNTIME                = $(wildcard x_heep_device/lib/runtime/*.c)
@@ -56,7 +56,7 @@ INC_FOLDERS                += $(sort $(dir $(wildcard x_heep_device/lib/runtime/
 INC_FOLDERS                += $(sort $(dir $(wildcard device/lib/crt/)))
 INC_FOLDERS                += $(sort $(dir $(wildcard device/lib/drivers/*/)))
 INC_FOLDERS                += $(sort $(dir $(wildcard device/lib/runtime/)))
-INC_FOLDERS_GCC             = $(addprefix -I ,$(INC_FOLDERS))
+INC_FOLDERS_GCC            = $(addprefix -I ,$(INC_FOLDERS))
 
 # Rules to generate hex (loadable by simulators) from elf
 
@@ -94,208 +94,7 @@ x_applications/hello_world/hello_world.elf: x_applications/hello_world/hello_wor
 		$(LIB_BASE) \
 		$(LIB_DRIVERS) \
 		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
-x_applications/example_power_gating_periph/example_power_gating_periph.elf: x_applications/example_power_gating_periph/example_power_gating_periph.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-DEXTERNAL_CRTO \
-		-T x_heep_linker/link.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT) \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-Wl,-Map=x_applications/example_power_gating_periph/example_power_gating_periph.map \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
-x_applications/example_power_gating_external/example_power_gating_external.elf: x_applications/example_power_gating_external/example_power_gating_external.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-DEXTERNAL_CRTO \
-		-T x_heep_linker/link.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT) \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-Wl,-Map=x_applications/example_power_gating_external/example_power_gating_external.map \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
-x_applications/example_set_retentive_ram_blocks/example_set_retentive_ram_blocks.elf: x_applications/example_set_retentive_ram_blocks/example_set_retentive_ram_blocks.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-DEXTERNAL_CRTO \
-		-T x_heep_linker/link.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT) \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-Wl,-Map=x_applications/example_set_retentive_ram_blocks/example_set_retentive_ram_blocks.map \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
-x_applications/dma_example/dma_example.elf: x_applications/dma_example/dma_example.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-DEXTERNAL_CRTO \
-		-T x_heep_linker/link.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT) \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-Wl,-Map=x_applications/dma_example/dma_example.map \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
-x_applications/spi_host_dma_example/spi_host_dma_example.elf: x_applications/spi_host_dma_example/spi_host_dma_example.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-DEXTERNAL_CRTO \
-		-T x_heep_linker/link.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT) \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-Wl,-Map=x_applications/spi_host_dma_example/spi_host_dma_example.map \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
-x_applications/spi_host_example/spi_host_example.flash_load.elf: x_applications/spi_host_example/spi_host_example.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-DEXTERNAL_CRTO \
-		-T x_heep_linker/link_flash_load.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT_FLASH_LOAD) \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-Wl,-Map=x_applications/spi_host_example/spi_host_example.map \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
-x_applications/spi_host_example/spi_host_example.elf: x_applications/spi_host_example/spi_host_example.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-DEXTERNAL_CRTO \
-		-T x_heep_linker/link.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT) \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-Wl,-Map=x_applications/spi_host_example/spi_host_example.map \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
-x_applications/spi_host_dma_power_gate_example/spi_host_dma_power_gate_example.elf: x_applications/spi_host_dma_power_gate_example/spi_host_dma_power_gate_example.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-DEXTERNAL_CRTO \
-		-T x_heep_linker/link.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT) \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-Wl,-Map=x_applications/spi_host_dma_power_gate_example/spi_host_dma_power_gate_example.map \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
-x_applications/example_power_gating_core/example_power_gating_core.elf: x_applications/example_power_gating_core/example_power_gating_core.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-DEXTERNAL_CRTO \
-		-T x_heep_linker/link.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT) \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
-
-x_applications/example_power_gating_core/example_power_gating_core.flash_exec.elf: x_applications/example_power_gating_core/example_power_gating_core.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-DEXTERNAL_CRTO \
-		-T x_heep_linker/link_flash_exec.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT_FLASH_EXEC) \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
-x_applications/example_power_gating_ram_blocks/example_power_gating_ram_blocks.elf: x_applications/example_power_gating_ram_blocks/example_power_gating_ram_blocks.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-DEXTERNAL_CRTO \
-		-T x_heep_linker/link.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT) \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
-x_applications/example_power_gating_ram_blocks/example_power_gating_ram_blocks.flash_load.elf: x_applications/example_power_gating_ram_blocks/example_power_gating_ram_blocks.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-DEXTERNAL_CRTO \
-		-T x_heep_linker/link_flash_load.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT_FLASH_LOAD) \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-Wl,-Map=x_applications/example_power_gating_ram_blocks/example_power_gating_ram_blocks.spihost.map \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-Wl,-Map=x_applications/hello_world/hello_world.map \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
 x_applications/hello_world/hello_world.flash_exec.elf: x_applications/hello_world/hello_world.c
@@ -329,6 +128,295 @@ x_applications/hello_world/hello_world.flash_load.elf: x_applications/hello_worl
 		$(LIB_DRIVERS) \
 		-Wl,-Map=x_applications/hello_world/hello_world.spihost.map \
 		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+applications/test_ram/test_ram.elf: applications/test_ram/test_ram.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-Wl,-Map=applications/test_ram/test_ram.map \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+x_applications/matadd/matadd.elf: x_applications/matadd/matadd.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-Wl,-Map=x_applications/matadd/matadd.map \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+x_applications/spi_host_example/spi_host_example.flash_load.elf: x_applications/spi_host_example/spi_host_example.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link_flash_load.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT_FLASH_LOAD) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-Wl,-Map=x_applications/spi_host_example/spi_host_example.spihost.map \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+x_applications/dma_example/dma_example.elf: x_applications/dma_example/dma_example.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-Wl,-Map=x_applications/dma_example/dma_example.map \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+x_applications/spi_host_dma_example/spi_host_dma_example.flash_load.elf: x_applications/spi_host_dma_example/spi_host_dma_example.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link_flash_load.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT_FLASH_LOAD) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-Wl,-Map=x_applications/spi_host_dma_example/spi_host_dma_example.spihost.map \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+applications/test_gpio_ao/test_gpio_ao.elf: applications/test_gpio_ao/test_gpio_ao.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-Wl,-Map=applications/test_gpio_ao/test_gpio_ao.map \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+applications/test_gpio/test_gpio.elf: applications/test_gpio/test_gpio.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-Wl,-Map=applications/test_gpio/test_gpio.map \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+applications/test_timers/test_timers.elf: applications/test_timers/test_timers.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-Wl,-Map=applications/test_timers/test_timers.map \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+x_applications/example_power_gating_core/example_power_gating_core.elf: x_applications/example_power_gating_core/example_power_gating_core.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-Wl,-Map=x_applications/example_power_gating_core/example_power_gating_core.map \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+applications/test_dma_power_gating/test_dma_power_gating.elf: applications/test_dma_power_gating/test_dma_power_gating.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-Wl,-Map=applications/test_dma_power_gating/test_dma_power_gating.map \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+x_applications/spi_host_dma_power_gate_example/spi_host_dma_power_gate_example.flash_load.elf: x_applications/spi_host_dma_power_gate_example/spi_host_dma_power_gate_example.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link_flash_load.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT_FLASH_LOAD) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-Wl,-Map=x_applications/spi_host_dma_power_gate_example/spi_host_dma_power_gate_example.spihost.map \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+applications/test_gpio_ao_power_gating/test_gpio_ao_power_gating.elf: applications/test_gpio_ao_power_gating/test_gpio_ao_power_gating.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-Wl,-Map=applications/test_gpio_ao_power_gating/test_gpio_ao_power_gating.map \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+applications/test_gpio_power_gating/test_gpio_power_gating.elf: applications/test_gpio_power_gating/test_gpio_power_gating.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-Wl,-Map=applications/test_gpio_power_gating/test_gpio_power_gating.map \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+x_applications/example_power_gating_periph/example_power_gating_periph.elf: x_applications/example_power_gating_periph/example_power_gating_periph.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-Wl,-Map=x_applications/example_power_gating_periph/example_power_gating_periph.map \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+x_applications/example_power_gating_ram_blocks/example_power_gating_ram_blocks.elf: x_applications/example_power_gating_ram_blocks/example_power_gating_ram_blocks.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-Wl,-Map=x_applications/example_power_gating_ram_blocks/example_power_gating_ram_blocks.map \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+x_applications/example_set_retentive_ram_blocks/example_set_retentive_ram_blocks.elf: x_applications/example_set_retentive_ram_blocks/example_set_retentive_ram_blocks.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-Wl,-Map=x_applications/example_set_retentive_ram_blocks/example_set_retentive_ram_blocks.map \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+x_applications/example_set_retentive_external_ram_blocks/example_set_retentive_external_ram_blocks.elf: x_applications/example_set_retentive_external_ram_blocks/example_set_retentive_external_ram_blocks.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-Wl,-Map=x_applications/example_set_retentive_external_ram_blocks/example_set_retentive_external_ram_blocks.map \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
 applications/blade_conv_16bits/blade_conv_16bits.elf: applications/blade_conv_16bits/blade_conv_16bits.c
@@ -428,40 +516,6 @@ applications/fll_test/fll_test.flash_load.elf: applications/fll_test/fll_test.c
 		$(LIB_BASE) \
 		$(LIB_DRIVERS) \
 		-Wl,-Map=applications/fll_test/fll_test.spihost.map \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
-x_applications/spi_host_dma_power_gate_example/spi_host_dma_power_gate_example.flash_load.elf: x_applications/spi_host_dma_power_gate_example/spi_host_dma_power_gate_example.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-DEXTERNAL_CRTO \
-		-T x_heep_linker/link_flash_load.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT_FLASH_LOAD) \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-Wl,-Map=x_applications/spi_host_dma_power_gate_example/spi_host_dma_power_gate_example.flash_load.map \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
-x_applications/spi_host_dma_example/spi_host_dma_example.flash_load.elf: x_applications/spi_host_dma_example/spi_host_dma_example.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-DEXTERNAL_CRTO \
-		-T x_heep_linker/link_flash_load.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT_FLASH_LOAD) \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-Wl,-Map=x_applications/spi_host_dma_example/spi_host_dma_example.flash_load.map \
 		-L $(RISCV)/riscv32-unknown-elf/lib \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
