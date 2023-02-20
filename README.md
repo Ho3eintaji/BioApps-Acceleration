@@ -282,3 +282,31 @@ if you want to simulate the netlist post-synthesis
 ```
 source run_verif.sh syn
 ```
+
+### RUN STATIC TIMING ANALYSIS
+
+Read the following sections to learn how to run a post-synthesis and post-pnr static timing analysis.
+
+#### POST-SYNTHESIS STA
+
+Browse to folder `implementation/sta/` and run the following command:
+
+```
+pt_shell -file scripts/set_synthesis.tcl
+```
+
+The default analysis mode is wc (worst case), but you can manually change it in file `implementation/sta/scripts/pt_script.tcl`.
+
+__NOTE__: this analysis can only be executed after having run a complete synthesis flow.
+
+#### POST-PNR STA
+
+Browse to folder `implementation/sta/` and run the following command:
+
+```
+pt_shell -file scripts/set_pnr.tcl
+```
+
+The default analysis mode is wc (worst case), but you can manually change it in file `implementation/sta/scripts/pt_script.tcl`.
+
+__NOTE__: this analysis can only be executed after having run a complete pnr flow.
