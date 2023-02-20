@@ -53,11 +53,11 @@ int main(int argc, char *argv[])
     rv_timer_set_tick_params(&timer_0_1, 0, tick_params);
     rv_timer_irq_enable(&timer_0_1, 0, 0, kRvTimerEnabled);
     rv_timer_arm(&timer_0_1, 0, 0, 1024);
-    rv_timer_counter_set_enabled(&timer_0_1, 0, kRvTimerEnabled);
 
     intr_flag = 0;
 
     dump_on();
+    rv_timer_counter_set_enabled(&timer_0_1, 0, kRvTimerEnabled);
     while(intr_flag==0) {
         wait_for_interrupt();
     }

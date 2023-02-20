@@ -50,11 +50,11 @@ int main(int argc, char *argv[])
     dma_set_write_ptr_inc(&dma, (uint32_t) 4);
     dma_set_spi_mode(&dma, (uint32_t) 0);
     dma_set_data_type(&dma, (uint32_t) 0);
-    dma_set_cnt_start(&dma, (uint32_t) TEST_DATA_SIZE*sizeof(*copied_data_4B));
 
     dma_intr_flag = 0;
 
     dump_on();
+    dma_set_cnt_start(&dma, (uint32_t) TEST_DATA_SIZE*sizeof(*copied_data_4B));
     while(dma_intr_flag==0) {
         wait_for_interrupt();
     }

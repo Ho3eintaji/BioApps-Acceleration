@@ -116,11 +116,11 @@ int main(int argc, char *argv[])
         .direction  = kSpiDirRxOnly
     });
     spi_set_command(&spi_host, cmd_read_rx);
-    spi_wait_for_ready(&spi_host);
 
     spi_intr_flag = 0;
 
     dump_on();
+    spi_wait_for_ready(&spi_host);
     while(spi_intr_flag==0) {
         wait_for_interrupt();
     }
