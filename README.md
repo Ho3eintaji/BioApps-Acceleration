@@ -310,3 +310,107 @@ pt_shell -file scripts/set_pnr.tcl
 The default analysis mode is wc (worst case), but you can manually change it in file `implementation/sta/scripts/pt_script.tcl`.
 
 __NOTE__: this analysis can only be executed after having run a complete pnr flow.
+
+### RUN DYNAMIC POWER ANALYSIS
+
+Read the following sections to learn how to run a post-synthesis and post-pnr dynamic power analysis.
+
+#### POST-SYNTHESIS DPA
+
+1. Run fusesoc with this command:
+
+```
+make questasim-sim-postsynth-opt FUSESOC_FLAGS="--flag=use_external_device_example --flag=use_upf"
+```
+
+2. Browse to `sw/` folder and compile your application with this command:
+
+```
+make clean ./applications/application_name/application_name.hex
+```
+
+In your application, use gpio0 to start and stop saving the switching activity to file `build/eslepfl__heepocrates_0/sim_postsynthesis-modelsim/sw_activity.vcd`. Check example `sw/applications/example_vcd_gen/`.
+
+3. Browse to `build/eslepfl__heepocrates_0/sim_postsynthesis-modelsim/` and run your simulation with this command:
+
+```
+make run RUN_OPT=1 PLUSARGS="c firmware=../../../sw/applications/application_name/application_name.hex boot_sel=0 execute_from_flash=0"
+```
+
+4. Browse to `implementation/dpa/` and run a dynamic power analysis with this command:
+
+```
+pwr_shell -file scripts/set_synthesis.tcl
+```
+
+The default analysis mode is tc (typical case), but you can manually change it in file `implementation/dpa/scripts/pwr_script.tcl`.
+
+You will find the generated reports in folder `implementation/dpa/reports/`.
+
+__NOTE__: this analysis can only be executed after having run a complete synthesis flow.
+
+#### POST-PNR DPA
+
+1. Run fusesoc with this command:
+
+```
+make questasim-sim-postfloorplan-opt FUSESOC_FLAGS="--flag=use_external_device_example --flag=use_upf"
+```
+
+2. Browse to `sw/` folder and compile your application with this command:
+
+```
+make clean ./applications/application_name/application_name.hex
+```
+
+In your application, use gpio0 to start and stop saving the switching activity to file `build/eslepfl__heepocrates_0/sim_postlayout-modelsim/sw_activity.vcd`. Check example `sw/applications/example_vcd_gen/`.
+
+3. Browse to `build/eslepfl__heepocrates_0/sim_postlayout-modelsim/` and run your simulation with this command:
+
+```
+make run RUN_OPT=1 PLUSARGS="c firmware=../../../sw/applications/application_name/application_name.hex boot_sel=0 execute_from_flash=0"
+```
+
+4. Browse to `implementation/dpa/` and run a dynamic power analysis with this command:
+
+```
+pwr_shell -file scripts/set_pnr.tcl
+```
+
+The default analysis mode is tc (typical case), but you can manually change it in file `implementation/dpa/scripts/pwr_script.tcl`.
+
+You will find the generated reports in folder `implementation/dpa/reports/`.
+
+__NOTE__: this analysis can only be executed after having run a complete pnr flow.
+
+#### AUTOMATISE DPA
+
+You can automatise your dynamic power analysis flow browsing to folder `implementation/dpa/` and running the following command:
+
+```
+source run_dpa.sh analysis_type app_name boot_sel execute_from_flash reports_folder_name external_results_folder_path
+```
+
+Paramters:
+
+`analysis_type`: synthesis or pnr
+
+`app_name`: name of the application you want to compile and simulate (your app should be located in folder `sw/applications/`)
+
+`boot_sel`: 0 --> booting from JTAG - 1 --> booting from flash
+
+`execute_from_flash`: 0 --> load from flash - 1 --> execute from flash
+
+`reports_folder_name`: name that you want to give to your reports folder
+
+`external_results_folder_path`: path to a folder outside the heepocrates repo used to store all the generated reports folders
+
+Example:
+
+```
+source run_dpa.sh pnr example_vcd_gen 1 1 reports_example_vcd_gen /path_to_your_home_dir/results/
+```
+
+The default analysis mode is tc (typical case), but you can manually change it in file `implementation/dpa/scripts/pwr_script.tcl`.
+
+__NOTE__: this analysis can only be executed after having run a complete synthesis or pnr flow.
