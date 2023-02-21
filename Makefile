@@ -68,6 +68,10 @@ questasim-sim-postlayout-opt:
 	fusesoc --cores-root . run --no-export --target=sim_postlayout_timing --tool=modelsim $(FUSESOC_FLAGS) --setup --build eslepfl::heepocrates 2>&1 | tee buildsim.log
 	$(MAKE) -C build/eslepfl__heepocrates_0/sim_postlayout_timing-modelsim/ opt
 
+questasim-sim-postlayout-notiming-opt:
+	fusesoc --cores-root . run --no-export --target=sim_postlayout --tool=modelsim $(FUSESOC_FLAGS) --setup --build eslepfl::heepocrates 2>&1 | tee buildsim.log
+	$(MAKE) -C build/eslepfl__heepocrates_0/sim_postlayout-modelsim/ opt
+
 synthesis: heepocrates-gen
 	cd implementation/synthesis/lc_shell/ && lc_shell -f mem_lib2db.tcl -batch;
 	cd implementation/synthesis/lc_shell/ && lc_shell -f fll_lib2db.tcl -batch;
