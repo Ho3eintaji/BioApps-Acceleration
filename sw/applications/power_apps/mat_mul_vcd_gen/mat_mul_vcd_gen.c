@@ -10,8 +10,12 @@
 #include "core_v_mini_mcu.h"
 #include "data.h"
 #include "gpio.h"
+#include "fll.h"
+#include "soc_ctrl.h"
+#include "heepocrates.h"
 
 #define VCD_TRIGGER_GPIO 0
+#define CLOCK_FREQ 250000000
 
 static gpio_t gpio;
 int32_t m_c[DIM*DIM];
@@ -25,6 +29,20 @@ void dump_off(void);
 int main(int argc, char *argv[])
 {
     uint32_t errors = 0;
+
+#if CLOCK_FREQ != 100000000
+    uint32_t fll_freq, fll_freq_real;
+
+    fll_t fll;
+    fll.base_addr = mmio_region_from_addr((uintptr_t)FLL_START_ADDRESS);
+
+    soc_ctrl_t soc_ctrl;
+    soc_ctrl.base_addr = mmio_region_from_addr((uintptr_t)SOC_CTRL_START_ADDRESS);
+
+    fll_freq = fll_set_freq(&fll, CLOCK_FREQ);
+    fll_freq_real = fll_get_freq(&fll);
+    soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
+#endif
 
     dump_on();
     matrixMul(m_a, m_b, m_c, DIM);

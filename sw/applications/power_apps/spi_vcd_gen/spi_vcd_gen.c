@@ -9,16 +9,19 @@
 #include "csr.h"
 #include "hart.h"
 #include "handler.h"
-#include "soc_ctrl.h"
 #include "spi_host.h"
 #include "fast_intr_ctrl.h"
 #include "fast_intr_ctrl_regs.h"
 #include "gpio.h"
+#include "fll.h"
+#include "soc_ctrl.h"
+#include "heepocrates.h"
 
 #define REVERT_24b_ADDR(addr) ((((uint32_t)(addr) & 0xff0000) >> 16) | ((uint32_t)(addr) & 0xff00) | (((uint32_t)(addr) & 0xff) << 16))
 #define FLASH_CLK_MAX_HZ (133*1000*1000)
 
 #define VCD_TRIGGER_GPIO 0
+#define CLOCK_FREQ 250000000
 
 static gpio_t gpio;
 
@@ -53,6 +56,17 @@ int main(int argc, char *argv[])
     CSR_SET_BITS(CSR_REG_MSTATUS, 0x8);
     const uint32_t mask = 1 << 20;
     CSR_SET_BITS(CSR_REG_MIE, mask);
+
+#if CLOCK_FREQ != 100000000
+    uint32_t fll_freq, fll_freq_real;
+
+    fll_t fll;
+    fll.base_addr = mmio_region_from_addr((uintptr_t)FLL_START_ADDRESS);
+
+    fll_freq = fll_set_freq(&fll, CLOCK_FREQ);
+    fll_freq_real = fll_get_freq(&fll);
+    soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
+#endif
 
     spi_set_enable(&spi_host, true);
     spi_enable_evt_intr(&spi_host, true);
