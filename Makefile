@@ -41,6 +41,7 @@ mcu-gen:
 heepocrates-gen: mcu-gen
 	python util/heepocrates_gen.py --cfg heepocrates_cfg.hjson --outdir hw/heepocrates/include --pkg-sv hw/heepocrates/include/heepocrates_pkg.sv.tpl;
 	python util/heepocrates_gen.py --cfg heepocrates_cfg.hjson --outdir sw/device/lib/runtime --pkg-sv sw/device/lib/runtime/heepocrates.h.tpl;
+	bash -c "cd hw/asic/memories; source compile_lib.csh; cd ../../../";
 	$(MAKE) verible
 
 questasim-sim: heepocrates-gen
