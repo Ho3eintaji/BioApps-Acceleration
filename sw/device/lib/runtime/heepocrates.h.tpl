@@ -11,6 +11,8 @@ extern "C" {
 
 #include "core_v_mini_mcu.h"
 
+#define CLK_FREQ ${clk_freq}
+
 #define EXT_XBAR_NMASTER ${xbar_nmasters}
 #define EXT_XBAR_NSLAVE  ${xbar_nsalves}
 

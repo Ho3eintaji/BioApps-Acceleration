@@ -18,7 +18,6 @@
 
 #define VCD_TRIGGER_GPIO 0
 #define TEST_DATA_SIZE 128
-#define CLOCK_FREQ 100000000
 
 static gpio_t gpio;
 
@@ -45,7 +44,7 @@ int main(int argc, char *argv[])
     const uint32_t mask = 1 << 19;
     CSR_SET_BITS(CSR_REG_MIE, mask);
 
-#if CLOCK_FREQ != 100000000
+#if CLK_FREQ != 100000000
     uint32_t fll_freq, fll_freq_real;
 
     fll_t fll;
@@ -54,7 +53,7 @@ int main(int argc, char *argv[])
     soc_ctrl_t soc_ctrl;
     soc_ctrl.base_addr = mmio_region_from_addr((uintptr_t)SOC_CTRL_START_ADDRESS);
 
-    fll_freq = fll_set_freq(&fll, CLOCK_FREQ);
+    fll_freq = fll_set_freq(&fll, CLK_FREQ);
     fll_freq_real = fll_get_freq(&fll);
     soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
 #endif
