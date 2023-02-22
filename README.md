@@ -395,7 +395,7 @@ Paramters:
 
 `analysis_type`: synthesis or pnr
 
-`app_name`: name of the application you want to compile and simulate (your app should be located in folder `sw/applications/`)
+`app_name`: name of the application you want to compile and simulate (your app should be located in folder `sw/applications/power_apps/`)
 
 `boot_sel`: 0 --> booting from JTAG - 1 --> booting from flash
 

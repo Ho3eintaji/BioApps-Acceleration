@@ -686,156 +686,124 @@ applications/coubertin_multiplication/coubertin_multiplication.elf: applications
 		-L $(RISCV)/riscv32-unknown-elf/lib \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
-applications/example_vcd_gen/example_vcd_gen.elf: applications/example_vcd_gen/example_vcd_gen.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-DEXTERNAL_CRTO \
-		-T x_heep_linker/link.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT) \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
-applications/example_vcd_gen/example_vcd_gen.flash_exec.elf: applications/example_vcd_gen/example_vcd_gen.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-DEXTERNAL_CRTO \
-		-T x_heep_linker/link_flash_exec.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT_FLASH_EXEC) \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
-applications/example_vcd_gen/example_vcd_gen.flash_load.elf: applications/example_vcd_gen/example_vcd_gen.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-DEXTERNAL_CRTO \
-		-T x_heep_linker/link_flash_load.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT_FLASH_LOAD) \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-Wl,-Map=applications/example_vcd_gen/example_vcd_gen.spihost.map \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
-applications/mat_add_vcd_gen/mat_add_vcd_gen.elf: applications/mat_add_vcd_gen/mat_add_vcd_gen.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-DEXTERNAL_CRTO \
-		-T x_heep_linker/link.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT) \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
-applications/mat_add_vcd_gen/mat_add_vcd_gen.flash_exec.elf: applications/mat_add_vcd_gen/mat_add_vcd_gen.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-DEXTERNAL_CRTO \
-		-T x_heep_linker/link_flash_exec.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT_FLASH_EXEC) \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
-applications/mat_add_vcd_gen/mat_add_vcd_gen.flash_load.elf: applications/mat_add_vcd_gen/mat_add_vcd_gen.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-DEXTERNAL_CRTO \
-		-T x_heep_linker/link_flash_load.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT_FLASH_LOAD) \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-Wl,-Map=applications/mat_add_vcd_gen/mat_add_vcd_gen.spihost.map \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
-applications/spi_dma_vcd_gen/spi_dma_vcd_gen.elf: applications/spi_dma_vcd_gen/spi_dma_vcd_gen.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-DEXTERNAL_CRTO \
-		-T x_heep_linker/link.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT) \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
-applications/spi_dma_vcd_gen/spi_dma_vcd_gen.flash_exec.elf: applications/spi_dma_vcd_gen/spi_dma_vcd_gen.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-DEXTERNAL_CRTO \
-		-T x_heep_linker/link_flash_exec.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT_FLASH_EXEC) \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
-applications/spi_dma_vcd_gen/spi_dma_vcd_gen.flash_load.elf: applications/spi_dma_vcd_gen/spi_dma_vcd_gen.c
-	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-		$(CUSTOM_GCC_FLAGS) \
-		-DHOST_BUILD \
-		-DEXTERNAL_CRTO \
-		-T x_heep_linker/link_flash_load.ld \
-		-I $(RISCV)/riscv32-unknown-elf/include \
-		$(INC_FOLDERS_GCC) \
-		-static \
-		$(LIB_CRT_FLASH_LOAD) \
-		$^ $(LIB_RUNTIME) \
-		$(LIB_BASE) \
-		$(LIB_DRIVERS) \
-		-Wl,-Map=applications/spi_dma_vcd_gen/spi_dma_vcd_gen.spihost.map \
-		-L $(RISCV)/riscv32-unknown-elf/lib \
-		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
 ###########################################################################
 # POWER APPS
 ###########################################################################
+
+applications/power_apps/example_vcd_gen/example_vcd_gen.elf: applications/power_apps/example_vcd_gen/example_vcd_gen.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+applications/power_apps/example_vcd_gen/example_vcd_gen.flash_exec.elf: applications/power_apps/example_vcd_gen/example_vcd_gen.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link_flash_exec.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT_FLASH_EXEC) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+applications/power_apps/example_vcd_gen/example_vcd_gen.flash_load.elf: applications/power_apps/example_vcd_gen/example_vcd_gen.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link_flash_load.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT_FLASH_LOAD) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-Wl,-Map=applications/power_apps/example_vcd_gen/example_vcd_gen.spihost.map \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+applications/power_apps/mat_add_vcd_gen/mat_add_vcd_gen.elf: applications/power_apps/mat_add_vcd_gen/mat_add_vcd_gen.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+applications/power_apps/mat_add_vcd_gen/mat_add_vcd_gen.flash_exec.elf: applications/power_apps/mat_add_vcd_gen/mat_add_vcd_gen.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link_flash_exec.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT_FLASH_EXEC) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+applications/power_apps/mat_add_vcd_gen/mat_add_vcd_gen.flash_load.elf: applications/power_apps/mat_add_vcd_gen/mat_add_vcd_gen.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link_flash_load.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT_FLASH_LOAD) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-Wl,-Map=applications/power_apps/mat_add_vcd_gen/mat_add_vcd_gen.spihost.map \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+applications/power_apps/spi_dma_vcd_gen/spi_dma_vcd_gen.flash_load.elf: applications/power_apps/spi_dma_vcd_gen/spi_dma_vcd_gen.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link_flash_load.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT_FLASH_LOAD) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-Wl,-Map=applications/power_apps/spi_dma_vcd_gen/spi_dma_vcd_gen.spihost.map \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
 applications/power_apps/mat_mul_vcd_gen/mat_mul_vcd_gen.elf: applications/power_apps/mat_mul_vcd_gen/mat_mul_vcd_gen.c
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \

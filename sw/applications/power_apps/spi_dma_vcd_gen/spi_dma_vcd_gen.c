@@ -9,17 +9,20 @@
 #include "csr.h"
 #include "hart.h"
 #include "handler.h"
-#include "soc_ctrl.h"
 #include "spi_host.h"
 #include "dma.h"
 #include "fast_intr_ctrl.h"
 #include "fast_intr_ctrl_regs.h"
 #include "gpio.h"
+#include "fll.h"
+#include "soc_ctrl.h"
+#include "heepocrates.h"
 
 #define COPY_DATA_NUM 16
 #define FLASH_CLK_MAX_HZ (133*1000*1000)
 #define REVERT_24b_ADDR(addr) ((((uint32_t)(addr) & 0xff0000) >> 16) | ((uint32_t)(addr) & 0xff00) | (((uint32_t)(addr) & 0xff) << 16))
 #define VCD_TRIGGER_GPIO 0
+#define CLOCK_FREQ 100000000
 
 int8_t dma_intr_flag;
 spi_host_t spi_host;
@@ -54,6 +57,17 @@ int main(int argc, char *argv[])
     CSR_SET_BITS(CSR_REG_MSTATUS, 0x8);
     const uint32_t mask = 1 << 19;
     CSR_SET_BITS(CSR_REG_MIE, mask);
+
+#if CLOCK_FREQ != 100000000
+    uint32_t fll_freq, fll_freq_real;
+
+    fll_t fll;
+    fll.base_addr = mmio_region_from_addr((uintptr_t)FLL_START_ADDRESS);
+
+    fll_freq = fll_set_freq(&fll, CLOCK_FREQ);
+    fll_freq_real = fll_get_freq(&fll);
+    soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
+#endif
 
     spi_set_enable(&spi_host, true);
     spi_output_enable(&spi_host, true);
@@ -119,7 +133,7 @@ int main(int argc, char *argv[])
 
     uint32_t read_byte_cmd;
     read_byte_cmd = ((REVERT_24b_ADDR(flash_data) << 8) | 0x03);
-    dma_intr_flag = 0;
+
     dma_set_cnt_start(&dma, (uint32_t) (COPY_DATA_NUM*sizeof(*copy_data)));
 
     const uint32_t cmd_read_rx = spi_create_command((spi_command_t){
@@ -134,23 +148,15 @@ int main(int argc, char *argv[])
     spi_set_command(&spi_host, cmd_read);
     spi_wait_for_ready(&spi_host);
     spi_set_command(&spi_host, cmd_read_rx);
-    spi_wait_for_ready(&spi_host);
 
-    printf("Waiting for the DMA interrupt...\n");
-
-    unsigned int cycles;
+    dma_intr_flag = 0;
 
     dump_on();
-    CSR_WRITE(CSR_REG_MCYCLE, 0);
-
+    spi_wait_for_ready(&spi_host);
     while(dma_intr_flag == 0) {
         wait_for_interrupt();
     }
-
-    CSR_READ(CSR_REG_MCYCLE, &cycles);
     dump_off();
-
-    printf("triggered after %d cycles.\n", cycles);
 
     const uint32_t powerdown_byte_cmd = 0xb9;
     spi_write_word(&spi_host, powerdown_byte_cmd);

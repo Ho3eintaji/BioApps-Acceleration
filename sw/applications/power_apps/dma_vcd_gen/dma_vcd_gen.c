@@ -18,7 +18,7 @@
 
 #define VCD_TRIGGER_GPIO 0
 #define TEST_DATA_SIZE 128
-#define CLOCK_FREQ 250000000
+#define CLOCK_FREQ 100000000
 
 static gpio_t gpio;
 
