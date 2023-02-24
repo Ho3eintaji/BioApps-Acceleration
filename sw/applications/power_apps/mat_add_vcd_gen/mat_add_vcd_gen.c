@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     uint32_t errors = 0;
     unsigned int cycles;
 
-#if CLOCK_FREQ != 100000000
+#if CLK_FREQ != 100000000
     uint32_t fll_freq, fll_freq_real;
 
     fll_t fll;
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
     soc_ctrl_t soc_ctrl;
     soc_ctrl.base_addr = mmio_region_from_addr((uintptr_t)SOC_CTRL_START_ADDRESS);
 
-    fll_freq = fll_set_freq(&fll, CLOCK_FREQ);
+    fll_freq = fll_set_freq(&fll, CLK_FREQ);
     fll_freq_real = fll_get_freq(&fll);
     soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
 #endif
