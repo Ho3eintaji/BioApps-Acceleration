@@ -15,7 +15,6 @@
 #include "heepocrates.h"
 
 #define VCD_TRIGGER_GPIO 0
-#define CLOCK_FREQ 100000000
 
 static gpio_t gpio;
 int32_t m_c[16*16];

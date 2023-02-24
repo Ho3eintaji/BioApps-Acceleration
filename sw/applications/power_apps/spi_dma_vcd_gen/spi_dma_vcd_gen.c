@@ -22,7 +22,6 @@
 #define FLASH_CLK_MAX_HZ (133*1000*1000)
 #define REVERT_24b_ADDR(addr) ((((uint32_t)(addr) & 0xff0000) >> 16) | ((uint32_t)(addr) & 0xff00) | (((uint32_t)(addr) & 0xff) << 16))
 #define VCD_TRIGGER_GPIO 0
-#define CLOCK_FREQ 100000000
 
 int8_t dma_intr_flag;
 spi_host_t spi_host;

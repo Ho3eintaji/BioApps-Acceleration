@@ -21,7 +21,6 @@
 #define FLASH_CLK_MAX_HZ (133*1000*1000)
 
 #define VCD_TRIGGER_GPIO 0
-#define CLOCK_FREQ 100000000
 
 static gpio_t gpio;
 
