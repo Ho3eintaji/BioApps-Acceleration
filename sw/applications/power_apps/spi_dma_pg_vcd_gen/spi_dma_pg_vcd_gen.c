@@ -9,39 +9,40 @@
 #include "csr.h"
 #include "hart.h"
 #include "handler.h"
-#include "soc_ctrl.h"
 #include "spi_host.h"
 #include "dma.h"
 #include "fast_intr_ctrl.h"
 #include "fast_intr_ctrl_regs.h"
 #include "gpio.h"
+#include "fll.h"
+#include "soc_ctrl.h"
+#include "heepocrates.h"
+#include "power_manager.h"
 
 #define COPY_DATA_NUM 16
 #define FLASH_CLK_MAX_HZ (133*1000*1000)
 #define REVERT_24b_ADDR(addr) ((((uint32_t)(addr) & 0xff0000) >> 16) | ((uint32_t)(addr) & 0xff00) | (((uint32_t)(addr) & 0xff) << 16))
 #define VCD_TRIGGER_GPIO 0
 
-int8_t dma_intr_flag;
 spi_host_t spi_host;
+
+static power_manager_t power_manager;
 
 static gpio_t gpio;
 
 void dump_on(void);
 void dump_off(void);
 
-void handler_irq_fast_dma(void)
-{
-    fast_intr_ctrl_t fast_intr_ctrl;
-    fast_intr_ctrl.base_addr = mmio_region_from_addr((uintptr_t)FAST_INTR_CTRL_START_ADDRESS);
-    clear_fast_interrupt(&fast_intr_ctrl, kDma_fic_e);
-    dma_intr_flag = 1;
-}
-
 uint32_t flash_data[COPY_DATA_NUM] __attribute__ ((aligned (4))) = {0x76543210,0xfedcba98,0x579a6f90,0x657d5bee,0x758ee41f,0x01234567,0xfedbca98,0x89abcdef,0x679852fe,0xff8252bb,0x763b4521,0x6875adaa,0x09ac65bb,0x666ba334,0x44556677,0x0000ba98};
 uint32_t copy_data[COPY_DATA_NUM] __attribute__ ((aligned (4)))  = { 0 };
 
 int main(int argc, char *argv[])
 {
+    mmio_region_t power_manager_reg = mmio_region_from_addr(POWER_MANAGER_START_ADDRESS);
+    power_manager.base_addr = power_manager_reg;
+    power_manager_counters_t power_manager_counters;
+    power_manager_counters_t power_manager_counters_cpu;
+
     spi_host.base_addr = mmio_region_from_addr((uintptr_t)SPI_START_ADDRESS);
 
     dma_t dma;
@@ -51,9 +52,16 @@ int main(int argc, char *argv[])
     soc_ctrl.base_addr = mmio_region_from_addr((uintptr_t)SOC_CTRL_START_ADDRESS);
     uint32_t core_clk = soc_ctrl_get_frequency(&soc_ctrl);
 
-    CSR_SET_BITS(CSR_REG_MSTATUS, 0x8);
-    const uint32_t mask = 1 << 19;
-    CSR_SET_BITS(CSR_REG_MIE, mask);
+#if CLK_FREQ != 100000000
+    uint32_t fll_freq, fll_freq_real;
+
+    fll_t fll;
+    fll.base_addr = mmio_region_from_addr((uintptr_t)FLL_START_ADDRESS);
+
+    fll_freq = fll_set_freq(&fll, CLK_FREQ);
+    fll_freq_real = fll_get_freq(&fll);
+    soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
+#endif
 
     spi_set_enable(&spi_host, true);
     spi_output_enable(&spi_host, true);
@@ -119,7 +127,7 @@ int main(int argc, char *argv[])
 
     uint32_t read_byte_cmd;
     read_byte_cmd = ((REVERT_24b_ADDR(flash_data) << 8) | 0x03);
-    dma_intr_flag = 0;
+
     dma_set_cnt_start(&dma, (uint32_t) (COPY_DATA_NUM*sizeof(*copy_data)));
 
     const uint32_t cmd_read_rx = spi_create_command((spi_command_t){
@@ -134,23 +142,36 @@ int main(int argc, char *argv[])
     spi_set_command(&spi_host, cmd_read);
     spi_wait_for_ready(&spi_host);
     spi_set_command(&spi_host, cmd_read_rx);
-    spi_wait_for_ready(&spi_host);
 
-    printf("Waiting for the DMA interrupt...\n");
+    power_gate_counters_init(&power_manager_counters, 0, 0, 0, 0, 0, 0, 0, 0);
+    power_gate_counters_init(&power_manager_counters_cpu, 40, 40, 30, 30, 20, 20, 0, 0);
 
-    unsigned int cycles;
+    power_gate_periph(&power_manager, kOff_e, &power_manager_counters);
+    power_gate_ram_block(&power_manager, 3, kOff_e, &power_manager_counters);
+    power_gate_ram_block(&power_manager, 4, kOff_e, &power_manager_counters);
+    power_gate_ram_block(&power_manager, 5, kOff_e, &power_manager_counters);
+    power_gate_ram_block(&power_manager, 6, kOff_e, &power_manager_counters);
+    power_gate_ram_block(&power_manager, 7, kOff_e, &power_manager_counters);
+    power_gate_external(&power_manager, 0, kOff_e, &power_manager_counters);
+    power_gate_external(&power_manager, 1, kOff_e, &power_manager_counters);
+    power_gate_external(&power_manager, 2, kOff_e, &power_manager_counters);
 
     dump_on();
-    CSR_WRITE(CSR_REG_MCYCLE, 0);
-
-    while(dma_intr_flag == 0) {
-        wait_for_interrupt();
-    }
-
-    CSR_READ(CSR_REG_MCYCLE, &cycles);
+    spi_wait_for_ready(&spi_host);
+    CSR_CLEAR_BITS(CSR_REG_MSTATUS, 0x8);
+    power_gate_core(&power_manager, kDma_pm_e, &power_manager_counters_cpu);
+    CSR_SET_BITS(CSR_REG_MSTATUS, 0x8);
     dump_off();
 
-    printf("triggered after %d cycles.\n", cycles);
+    power_gate_periph(&power_manager, kOn_e, &power_manager_counters);
+    power_gate_ram_block(&power_manager, 3, kOn_e, &power_manager_counters);
+    power_gate_ram_block(&power_manager, 4, kOn_e, &power_manager_counters);
+    power_gate_ram_block(&power_manager, 5, kOn_e, &power_manager_counters);
+    power_gate_ram_block(&power_manager, 6, kOn_e, &power_manager_counters);
+    power_gate_ram_block(&power_manager, 7, kOn_e, &power_manager_counters);
+    power_gate_external(&power_manager, 0, kOn_e, &power_manager_counters);
+    power_gate_external(&power_manager, 1, kOn_e, &power_manager_counters);
+    power_gate_external(&power_manager, 2, kOn_e, &power_manager_counters);
 
     const uint32_t powerdown_byte_cmd = 0xb9;
     spi_write_word(&spi_host, powerdown_byte_cmd);

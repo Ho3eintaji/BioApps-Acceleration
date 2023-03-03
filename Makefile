@@ -40,7 +40,8 @@ mcu-gen:
 
 heepocrates-gen: mcu-gen
 	python util/heepocrates_gen.py --cfg heepocrates_cfg.hjson --outdir hw/heepocrates/include --pkg-sv hw/heepocrates/include/heepocrates_pkg.sv.tpl;
-	python util/heepocrates_gen.py --cfg heepocrates_cfg.hjson --outdir sw/device/lib/runtime --pkg-sv sw/device/lib/runtime/heepocrates.h.tpl;
+	python util/heepocrates_gen.py --cfg heepocrates_cfg.hjson --outdir sw/device/lib/runtime --clk_freq ${CLK_FREQ} --pkg-sv sw/device/lib/runtime/heepocrates.h.tpl;
+	bash -c "cd hw/asic/memories; source compile_lib.csh; cd ../../../";
 	$(MAKE) verible
 
 questasim-sim: heepocrates-gen
@@ -67,6 +68,10 @@ questasim-sim-postfloorplan-opt:
 questasim-sim-postlayout-opt:
 	fusesoc --cores-root . run --no-export --target=sim_postlayout_timing --tool=modelsim $(FUSESOC_FLAGS) --setup --build eslepfl::heepocrates 2>&1 | tee buildsim.log
 	$(MAKE) -C build/eslepfl__heepocrates_0/sim_postlayout_timing-modelsim/ opt
+
+questasim-sim-postlayout-notiming-opt: heepocrates-gen
+	fusesoc --cores-root . run --no-export --target=sim_postlayout --tool=modelsim $(FUSESOC_FLAGS) --setup --build eslepfl::heepocrates 2>&1 | tee buildsim.log
+	$(MAKE) -C build/eslepfl__heepocrates_0/sim_postlayout-modelsim/ opt
 
 synthesis: heepocrates-gen
 	cd implementation/synthesis/lc_shell/ && lc_shell -f mem_lib2db.tcl -batch;

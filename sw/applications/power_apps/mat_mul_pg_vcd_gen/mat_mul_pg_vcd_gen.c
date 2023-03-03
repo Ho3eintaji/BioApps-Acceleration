@@ -13,6 +13,7 @@
 #include "fll.h"
 #include "soc_ctrl.h"
 #include "heepocrates.h"
+#include "power_manager.h"
 
 #define VCD_TRIGGER_GPIO 0
 
@@ -22,12 +23,18 @@ int32_t m_c[DIM*DIM];
 void __attribute__ ((noinline)) matrixMul(int32_t *A, int32_t *B, int32_t *C, int N);
 uint32_t check_results(int32_t *C, int N);
 
+static power_manager_t power_manager;
+
 void dump_on(void);
 void dump_off(void);
 
 int main(int argc, char *argv[])
 {
     uint32_t errors = 0;
+
+    mmio_region_t power_manager_reg = mmio_region_from_addr(POWER_MANAGER_START_ADDRESS);
+    power_manager.base_addr = power_manager_reg;
+    power_manager_counters_t power_manager_counters;
 
 #if CLK_FREQ != 100000000
     uint32_t fll_freq, fll_freq_real;
@@ -43,9 +50,31 @@ int main(int argc, char *argv[])
     soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
 #endif
 
+    power_gate_counters_init(&power_manager_counters, 0, 0, 0, 0, 0, 0, 0, 0);
+
+    power_gate_periph(&power_manager, kOff_e, &power_manager_counters);
+    power_gate_ram_block(&power_manager, 3, kOff_e, &power_manager_counters);
+    power_gate_ram_block(&power_manager, 4, kOff_e, &power_manager_counters);
+    power_gate_ram_block(&power_manager, 5, kOff_e, &power_manager_counters);
+    power_gate_ram_block(&power_manager, 6, kOff_e, &power_manager_counters);
+    power_gate_ram_block(&power_manager, 7, kOff_e, &power_manager_counters);
+    power_gate_external(&power_manager, 0, kOff_e, &power_manager_counters);
+    power_gate_external(&power_manager, 1, kOff_e, &power_manager_counters);
+    power_gate_external(&power_manager, 2, kOff_e, &power_manager_counters);
+
     dump_on();
     matrixMul(m_a, m_b, m_c, DIM);
     dump_off();
+
+    power_gate_periph(&power_manager, kOn_e, &power_manager_counters);
+    power_gate_ram_block(&power_manager, 3, kOn_e, &power_manager_counters);
+    power_gate_ram_block(&power_manager, 4, kOn_e, &power_manager_counters);
+    power_gate_ram_block(&power_manager, 5, kOn_e, &power_manager_counters);
+    power_gate_ram_block(&power_manager, 6, kOn_e, &power_manager_counters);
+    power_gate_ram_block(&power_manager, 7, kOn_e, &power_manager_counters);
+    power_gate_external(&power_manager, 0, kOn_e, &power_manager_counters);
+    power_gate_external(&power_manager, 1, kOn_e, &power_manager_counters);
+    power_gate_external(&power_manager, 2, kOn_e, &power_manager_counters);
 
     errors = check_results(m_c, DIM);
 

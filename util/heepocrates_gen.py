@@ -66,6 +66,10 @@ def main():
                         "--verbose",
                         help="increase output verbosity",
                         action="store_true")
+    parser.add_argument("--clk_freq",
+                        nargs='?',
+                        default="100000000",
+                        help="Clock frequency (Hz)")
 
     args = parser.parse_args()
 
@@ -86,6 +90,11 @@ def main():
 
     outdir = args.outdir
     outdir.mkdir(parents=True, exist_ok=True)
+
+    if args.clk_freq != None and args.clk_freq != '':
+        clk_freq = int(args.clk_freq)
+    else:
+        clk_freq = 100000000
 
     xbar_nmasters = obj['ext_xbar_masters']
 
@@ -119,6 +128,7 @@ def main():
         "coubertin_periph_size_address"   : coubertin_periph_size_address,
         "heepocrates_ctrl_start_address"  : heepocrates_ctrl_start_address,
         "heepocrates_ctrl_size_address"   : heepocrates_ctrl_size_address,
+        "clk_freq"                        : clk_freq,
     }
 
     ###########
