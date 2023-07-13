@@ -12,6 +12,7 @@ build/
 *.elf
 *.dis
 *.do
+*.map
 
 # ignore output files
 run_verif_rtl_log.txt
