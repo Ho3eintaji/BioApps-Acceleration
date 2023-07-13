@@ -1,4 +1,6 @@
-Minimal configuration of a core-v-mcu
+Minimal configuration of a core-v-mcu.
+
+Refers to [TestingBoard](TestingBoard.md) to connect to the real silicon chip.
 
 ## Prerequisite
 
