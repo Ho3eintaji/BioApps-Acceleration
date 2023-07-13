@@ -12,7 +12,7 @@
 #include "rv_plic_regs.h"
 #include "gpio.h"
 
-#define GPIO_TB_OUT 0
+#define GPIO_TEST_OUT 0
 
 // Toggling GPIO 0
 
@@ -23,27 +23,17 @@ int main(int argc, char *argv[])
     gpio_result_t gpio_res;
     gpio_params.base_addr = mmio_region_from_addr((uintptr_t)GPIO_AO_START_ADDRESS);
     gpio_res = gpio_init(gpio_params, &gpio);
-    if (gpio_res != kGpioOk) {
-        printf("Fail.\n;");
-        return -1;
-    }
-
-    gpio_res = gpio_output_set_enabled(&gpio, GPIO_TB_OUT, true);
-    if (gpio_res != kGpioOk) {
-        printf("Failed\n;");
-        return -1;
-    }
+    gpio_res = gpio_output_set_enabled(&gpio, GPIO_TEST_OUT, true);
 
     int gpio_val=0;
     while(1){
         gpio_val = !gpio_val;
-        gpio_write(&gpio, GPIO_TB_OUT, gpio_val);
+        gpio_write(&gpio, GPIO_TEST_OUT, gpio_val);
         for(int i=0; i<1024; i++) {
             asm volatile("nop");
         }
     }
 
-    printf("Success.\n");
 
     return EXIT_SUCCESS;
 }
