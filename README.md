@@ -61,6 +61,14 @@ If you want to bypass the FLL, compile as:
 make x_applications/hello_world/hello_world.hex TARGET=bypass_fll
 ```
 
+or if you are using the Testing Board, do
+
+```
+make x_applications/hello_world/hello_world.hex TARGET=testing_board_bypass_fll
+```
+
+this assume your input Clock is `50MHz`.
+
 ## Simulating
 
 This project supports simulation only with Questasim as tapeouts should be signed-off with commercial EDA tools.
