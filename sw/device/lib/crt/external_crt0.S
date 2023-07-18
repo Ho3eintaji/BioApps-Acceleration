@@ -32,11 +32,12 @@
     slli  a4, a4, FLL_CONFIG_1_DCO_CODE_STA_OFFSET
     or    a2, a2, a4
     sw    a2, FLL_CONFIG_1_REG_OFFSET(a1)
-    // Set lock_enable to 1
 #ifndef USE_TESTING_BOARD
+    // Set lock_enable to 1
     li    a4, 1
     slli  a4, a4, FLL_CONFIG_1_LOCK_ENABLE_BIT
 #else
+    // Set lock_enable to 0 in the ASIC version
     li    a4, 1
     slli  a4, a4, FLL_CONFIG_1_LOCK_ENABLE_BIT
     not   a4, a4 #(this one is ~0100_0000_0000_0000)
