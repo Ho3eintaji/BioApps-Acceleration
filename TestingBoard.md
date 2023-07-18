@@ -144,11 +144,55 @@ Bye.
 Now we program the flash as:
 
 ```
-./iceprog -d i:0x0403:0x6011 -I B ./iceprog -d i:0x0403:0x6011 -I B ../../../../../../../sw/applications/while_1_printf/while_1_printf.flash_load.hex
+./iceprog -d i:0x0403:0x6011 -I B ../../../../../../../sw/applications/while_1_printf/while_1_printf.flash_load.hex
 ```
 
 
+Reset the chip and connect to the `UART` terminal (e.g. `pyterm.py -b 9600 ftdi://ftdi:4232h/3`)
 
 
+## See whether the board is alive (Flash Exec mode)
+
+
+To boot the system from the Flash with `flash_exec` mode, set the `BOOT_SEL` switch in the board to `H` (1),
+and `EXEC FLASH` to `H` (1).
+
+```
+make applications/while_1_printf/while_1_printf.flash_exec.hex TARGET=testing_board_bypass_fll
+```
+
+Check whether the flash is alive:
+
+```
+cd hw/vendor/esl_epfl_x_heep/sw/vendor/yosyshq_icestorm/iceprog
+```
+
+Compile `iceprog` if you haven't done it yet by executing `make`.
+
+Then execute:
+
+```
+/iceprog -d i:0x0403:0x6011 -I B -t
+```
+you should see:
+
+```
+init..
+cdone: high
+reset..
+cdone: high
+flash ID: 0xEF 0x60 0x18 0x00
+cdone: high
+Bye.
+```
+
+Now we program the flash as:
+
+```
+./iceprog -d i:0x0403:0x6011 -I B ../../../../../../../sw/applications/while_1_printf/while_1_printf.flash_exec.hex
+```
+
+
+Reset the chip and connect to the `UART` terminal (e.g. `pyterm.py -b 9600 ftdi://ftdi:4232h/3`)
 
 
