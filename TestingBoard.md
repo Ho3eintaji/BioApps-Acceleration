@@ -82,15 +82,35 @@ $RISCV/bin/riscv32-unknown-elf-gdb ./sw/applications/matmul/matmul.elf
 
 If you connect the logic analyzer or the oscilloscope to the `GPIO0` on the board, you should see the GPIO toggling.
 
+### Trying the CGRA
+
+To test the CGRA, two examples are available for now.
+
+```
+make applications/cgra_func_test/main.dis TARGET=testing_board_bypass_fll
+```
+
+or 
+
+```
+make applications/cgra_kernels_test/main.dis TARGET=testing_board_bypass_fll
+```
+
+Then load it to the board as
+
+```
+$RISCV/bin/riscv32-unknown-elf-gdb ./sw/applications/cgra_func_test/main.elf
+```
+
+To see the output, connect to the `UART` terminal (e.g. `pyterm.py -b 9600 ftdi://ftdi:4232h/3`)
 
 ### Trying the FLL
 
 
-Set the Frequency to 32768Hz from the waveform generator, and the switch to bypass the FLL to `L` (0).
-
+Set the Frequency to 32768 Hz from the waveform generator, and the switch to bypass the FLL to `L` (0). Make sure you use the write TARGET!
 
 ```
-make applications/while_1_printf/while_1_printf.flash_load.dis TARGET=testing_board_bypass_fll
+make applications/while_1_printf/while_1_printf.flash_load.dis TARGET=testing_board_use_fll
 ```
 
 Then load it to the board as
@@ -103,8 +123,49 @@ Run the application that will print `hello` concatenated with incremental number
 
 To see the output, connect to the `UART` terminal (e.g. `pyterm.py -b 9600 ftdi://ftdi:4232h/3`)
 
-Use the `BAUDRATE` `9600` to visualize the correct output of the uart. `WARNING` this is not currently not working.
+Use the `BAUDRATE` `9600` to visualize the correct output of the `UART`.
 
+Alternatively, you can launch the fll_test application (define the PRINT_FLL_DEFAULT_VAL_TEST macro to enable extra `UART` outputs).
+
+```
+make applications/fll_test/fll_test.hex TARGET=testing_board_use_fll
+```
+
+This test runs various experiments, the first one checks the FLL control register values (`WARNING` it gives error for now because the default values are changed by the external crt0 when the FLL is initialized to 100 MHz). The FLL has been tested up to 300 MHz for now and it seems to work for this application (although some printf are not working at the beginning when relaunching the application multiple times probably because the FLL clock frequency register is not updated properly so the `UART` fails, but the application runs and the last printf always work).
+
+### Changing the FLL clock reference
+
+To change the FLL clock reference you need to update the following files:
+
+sw/device/lib/crt/external_crt0.S
+
+The FLL output frequency in feedback mode (mode=1) is given by:
+
+```
+FLL_freq = clock_ref * mult / div
+```
+
+For a 32768 clock reference, the external_crt0.S set the mult parameter to 6103 and the div parameter to 2:
+
+``` 
+32768 * 6103 / 2 = 99991552 Hz
+```
+
+You also need to update the sw/device/target/testing_board_use_fll/x-heep.h file. For example, to use a 1 MHz clock reference change the following variables (always use power of two clock reference, so for 1 MHz it is actually 1.048576 MHz = 2^20). You can also change the `UART` baudrate if wanted.
+
+```
+#define REFERENCE_CLOCK_Hz 1048576
+#define REFERENCE_CLOCK_Hz_LOG2 20
+#define UART_BAUDRATE 9600
+```
+
+You need to update the external_crt0.S file accordingly to initialize the FLL to 100 MHz. With a 1.048576 MHz you need to set the mult parameter to 190 and the div parameter to 2:
+
+```
+1048576 * 190 / 2 = 99614720 Hz
+```
+
+Finally, make sure you change the clock generator frequency to 1048576 Hz.
 
 ## See whether the board is alive (Flash Load mode)
 

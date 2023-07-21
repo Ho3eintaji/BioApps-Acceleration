@@ -19,7 +19,7 @@
     slli  a5, a5, FLL_CONFIG_2_LOCK_TOLERANCE_OFFSET
     xori  a5, a5, -1 // bitwise not
     and   a3, a3, a5
-    li    a4, 0x50
+    li    a4, 0x40
     slli  a4, a4, FLL_CONFIG_2_LOCK_TOLERANCE_OFFSET
     or    a3, a3, a4
     sw    a3, FLL_CONFIG_2_REG_OFFSET(a1)
@@ -53,11 +53,13 @@
     slli  a5, a5, FLL_CONFIG_1_CLK_MULT_OFFSET
     xori  a5, a5, -1 // bitwise not
     and   a2, a2, a5
-    // Create 6103 immediate for mult
+    // In feedback mode, the FLL frequency is given by: REFERENCE_CLOCK_Hz*mult/div
+    // For a 100 MHz FLL clock:  32768 * 6103 / 2 = 99991552 Hz
+    // Create 6103 immediate for mult for 32768 Hz ref clock
     lui   a4, 1
     addi  a4, a4, 2007
     or    a2, a2, a4
-    // Set clk_div
+    // Set clk_div to 2
     li    a5, FLL_CONFIG_1_CLK_DIV_MASK
     slli  a5, a5, FLL_CONFIG_1_CLK_DIV_OFFSET
     xori  a5, a5, -1 // bitwise not
