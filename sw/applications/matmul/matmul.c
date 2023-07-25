@@ -23,6 +23,11 @@
     #pragma message ( "MEASURE_POWER_APPLICATION is defined, the application never ends" )
 #endif
 
+#ifdef SWITCH_OFF_MEMORIES
+    #include "power_manager.h"
+    #pragma message ( "SWITCHING OFF BANKS 4-7" )
+#endif
+
 int __attribute__ ((noinline)) matmul(int N, int* matrixM, int* matrixA, int * C, int* calculated_output)
 {
 
@@ -63,12 +68,73 @@ int main(int argc, char const *argv[])
     gpio_res = gpio_output_set_enabled(&gpio, GPIO_TEST_OUT, true);
     #endif // TOGGLE_GPIO
 
+
+#ifdef SWITCH_OFF_MEMORIES
+    power_manager_t power_manager;
+    power_manager_counters_t power_manager_counters;
+    mmio_region_t power_manager_reg = mmio_region_from_addr(POWER_MANAGER_START_ADDRESS);
+    power_manager.base_addr = power_manager_reg;
+
+    //counters
+    uint32_t reset_off, reset_on, switch_off, switch_on, iso_off, iso_on;
+
+    //Turn off: first, isolate the CPU outputs, then I reset it, then I switch it off (reset and switch off order does not really matter)
+    iso_off = 10;
+    reset_off = iso_off + 5;
+    switch_off = reset_off + 5;
+    //Turn on: first, give back power by switching on, then deassert the reset, the unisolate the CPU outputs
+    switch_on = 10;
+    reset_on = switch_on + 20; //give 20 cycles to emulate the turn on time, this number depends on technology and here it is just a random number
+    iso_on = reset_on + 5;
+
+    if (power_gate_counters_init(&power_manager_counters, reset_off, reset_on, switch_off, switch_on, iso_off, iso_on, 0, 0) != kPowerManagerOk_e)
+    {
+#ifdef DEBUG_APPLICATION
+        printf("Error: power manager fail. Check the reset and powergate counters value\n");
+#endif //DEBUG_APPLICATION
+        return -1;
+    }
+
+    if (power_gate_ram_block(&power_manager, 4, kOff_e, &power_manager_counters) != kPowerManagerOk_e)
+    {
+#ifdef DEBUG_APPLICATION
+        printf("Error: power manager fail.\n");
+#endif //DEBUG_APPLICATION
+        return -1;
+    }
+    if (power_gate_ram_block(&power_manager, 5, kOff_e, &power_manager_counters) != kPowerManagerOk_e)
+    {
+#ifdef DEBUG_APPLICATION
+        printf("Error: power manager fail.\n");
+#endif //DEBUG_APPLICATION
+        return -1;
+    }
+    if (power_gate_ram_block(&power_manager, 6, kOff_e, &power_manager_counters) != kPowerManagerOk_e)
+    {
+#ifdef DEBUG_APPLICATION
+        printf("Error: power manager fail.\n");
+#endif //DEBUG_APPLICATION
+        return -1;
+    }
+    if (power_gate_ram_block(&power_manager, 7, kOff_e, &power_manager_counters) != kPowerManagerOk_e)
+    {
+#ifdef DEBUG_APPLICATION
+        printf("Error: power manager fail.\n");
+#endif //DEBUG_APPLICATION
+        return -1;
+    }
+#endif
+
     #ifdef MEASURE_POWER_APPLICATION
     while(1) {
     #endif //MEASURE_POWER_APPLICATION
         gpio_cnt++;
 
+	#ifdef MAKE_WFI
+	asm volatile ("wfi");
+	#else
         matmul(MATMUL_RC_SIZE, input_M, input_A, output_C, output_expected_C);
+	#endif
 
         #ifdef TOGGLE_GPIO
             if(gpio_cnt > 1000){
