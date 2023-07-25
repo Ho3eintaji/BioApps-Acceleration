@@ -2,6 +2,7 @@
 
 The chip manufactured is hosted in the [Testing Board](https://eslgit.epfl.ch/heep/heepocrates-testing-board).
 
+Some utilities in Python to control the board are available [here](https://eslgit.epfl.ch/heep/heepocrates-testing)
 
 ### SETUP
 
