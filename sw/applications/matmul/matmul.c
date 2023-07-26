@@ -4,10 +4,11 @@
 
 #include "heepocrates.h"
 #include "core_v_mini_mcu.h"
-
+#include "power_manager.h"
 #include "matmul_data.h"
 #include "gpio.h"
 
+#define KEYWORD 0x0DA41DE
 
 #define GPIO_TEST_OUT 0
 
@@ -24,7 +25,7 @@
 #endif
 
 #ifdef SWITCH_OFF_MEMORIES
-    #include "power_manager.h"
+
     #pragma message ( "SWITCHING OFF BANKS 4-7" )
 #endif
 
@@ -59,17 +60,18 @@ int main(int argc, char const *argv[])
     int gpio_val=0;
     int gpio_cnt = 0;
 
-    #ifdef TOGGLE_GPIO
     gpio_t gpio;
     gpio_params_t gpio_params;
     gpio_result_t gpio_res;
     gpio_params.base_addr = mmio_region_from_addr((uintptr_t)GPIO_AO_START_ADDRESS);
     gpio_res = gpio_init(gpio_params, &gpio);
     gpio_res = gpio_output_set_enabled(&gpio, GPIO_TEST_OUT, true);
-    #endif // TOGGLE_GPIO
+    gpio_write(&gpio, GPIO_TEST_OUT, 0);
+
+    volatile int * ptr_bank_off = 0x00028000;
+    *ptr_bank_off = KEYWORD;
 
 
-#ifdef SWITCH_OFF_MEMORIES
     power_manager_t power_manager;
     power_manager_counters_t power_manager_counters;
     mmio_region_t power_manager_reg = mmio_region_from_addr(POWER_MANAGER_START_ADDRESS);
@@ -80,51 +82,60 @@ int main(int argc, char const *argv[])
 
     //Turn off: first, isolate the CPU outputs, then I reset it, then I switch it off (reset and switch off order does not really matter)
     iso_off = 10;
-    reset_off = iso_off + 5;
+    reset_off = iso_off + 5000;
     switch_off = reset_off + 5;
     //Turn on: first, give back power by switching on, then deassert the reset, the unisolate the CPU outputs
     switch_on = 10;
     reset_on = switch_on + 20; //give 20 cycles to emulate the turn on time, this number depends on technology and here it is just a random number
-    iso_on = reset_on + 5;
+    iso_on = 5;
+
+
+#ifdef SWITCH_OFF_MEMORIES
 
     if (power_gate_counters_init(&power_manager_counters, reset_off, reset_on, switch_off, switch_on, iso_off, iso_on, 0, 0) != kPowerManagerOk_e)
     {
-#ifdef DEBUG_APPLICATION
+	#ifdef DEBUG_APPLICATION
         printf("Error: power manager fail. Check the reset and powergate counters value\n");
-#endif //DEBUG_APPLICATION
+	#endif //DEBUG_APPLICATION
         return -1;
     }
 
     if (power_gate_ram_block(&power_manager, 4, kOff_e, &power_manager_counters) != kPowerManagerOk_e)
     {
-#ifdef DEBUG_APPLICATION
+	#ifdef DEBUG_APPLICATION
         printf("Error: power manager fail.\n");
-#endif //DEBUG_APPLICATION
+	#endif //DEBUG_APPLICATION
         return -1;
     }
     if (power_gate_ram_block(&power_manager, 5, kOff_e, &power_manager_counters) != kPowerManagerOk_e)
     {
-#ifdef DEBUG_APPLICATION
+	#ifdef DEBUG_APPLICATION
         printf("Error: power manager fail.\n");
-#endif //DEBUG_APPLICATION
+	#endif //DEBUG_APPLICATION
         return -1;
     }
     if (power_gate_ram_block(&power_manager, 6, kOff_e, &power_manager_counters) != kPowerManagerOk_e)
     {
-#ifdef DEBUG_APPLICATION
+	#ifdef DEBUG_APPLICATION
         printf("Error: power manager fail.\n");
-#endif //DEBUG_APPLICATION
+	#endif //DEBUG_APPLICATION
         return -1;
     }
     if (power_gate_ram_block(&power_manager, 7, kOff_e, &power_manager_counters) != kPowerManagerOk_e)
     {
-#ifdef DEBUG_APPLICATION
+	#ifdef DEBUG_APPLICATION
         printf("Error: power manager fail.\n");
-#endif //DEBUG_APPLICATION
+	#endif //DEBUG_APPLICATION
         return -1;
     }
 #endif
-
+/*
+    int val = *ptr_bank_off;
+    if (val == KEYWORD ) {
+    	gpio_write(&gpio, GPIO_TEST_OUT, 1);
+	//asm volatile ("wfi");
+    }
+*/
     #ifdef MEASURE_POWER_APPLICATION
     while(1) {
     #endif //MEASURE_POWER_APPLICATION
@@ -132,6 +143,9 @@ int main(int argc, char const *argv[])
 
 	#ifdef MAKE_WFI
 	asm volatile ("wfi");
+	#elif POWER_GATE_CPU
+	gpio_write(&gpio, GPIO_TEST_OUT, 1);
+	power_gate_core(&power_manager, 0, &power_manager_counters);
 	#else
         matmul(MATMUL_RC_SIZE, input_M, input_A, output_C, output_expected_C);
 	#endif
