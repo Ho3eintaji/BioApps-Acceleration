@@ -19,7 +19,7 @@
     slli  a5, a5, FLL_CONFIG_2_LOCK_TOLERANCE_OFFSET
     xori  a5, a5, -1 // bitwise not
     and   a3, a3, a5
-    li    a4, 0x40
+    li    a4, 0x50
     slli  a4, a4, FLL_CONFIG_2_LOCK_TOLERANCE_OFFSET
     or    a3, a3, a4
     sw    a3, FLL_CONFIG_2_REG_OFFSET(a1)
@@ -40,8 +40,10 @@
     // Set lock_enable to 0 in the ASIC version
     li    a4, 1
     slli  a4, a4, FLL_CONFIG_1_LOCK_ENABLE_BIT
-    not   a4, a4 #(this one is ~0100_0000_0000_0000)
-    and   a2, a2, a4
+    // We keep the FLL lock enable othwerwise the frequency is not stable and the uart fails
+    // Uncomment the two lines below to disable the FLL lock
+    // not   a4, a4 #(this one is ~0100_0000_0000_0000)
+    // and   a2, a2, a4
 #endif
     or    a2, a2, a4
     // Set op_mode to 1
