@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 
     while(1){  
 
-	    if(gpio_val > 10000) {
+	    if(gpio_val > 10000000) {
 		    sram_off = !sram_off;
 		    gpio_val = 0;
 		    gpio_write(&gpio, GPIO_TEST_OUT, sram_off);
