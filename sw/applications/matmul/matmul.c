@@ -225,7 +225,7 @@ int main(int argc, char const *argv[])
     #ifdef MEASURE_POWER_APPLICATION
     }
     #endif //MEASURE_POWER_APPLICATION
-
+      
 
     return 0;
 }
