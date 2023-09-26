@@ -1340,6 +1340,57 @@ applications/toggle_power_gating_sram/toggle_power_gating_sram.flash_exec.elf: a
 		-Wl,-Map=applications/toggle_power_gating_sram/toggle_power_gating_sram.map \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
+applications/example_dp_slp_mode/example_dp_slp_mode.elf: applications/example_dp_slp_mode/example_dp_slp_mode.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-Wl,-Map=applications/example_dp_slp_mode/example_dp_slp_mode.map \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+applications/example_dp_slp_mode/example_dp_slp_mode.flash_load.elf: applications/example_dp_slp_mode/example_dp_slp_mode.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link_flash_load.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT_FLASH_LOAD) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-Wl,-Map=applications/example_dp_slp_mode/example_dp_slp_mode.map \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+applications/example_dp_slp_mode/example_dp_slp_mode.flash_exec.elf: applications/example_dp_slp_mode/example_dp_slp_mode.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link_flash_exec.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT_FLASH_EXEC) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-Wl,-Map=applications/example_dp_slp_mode/example_dp_slp_mode.map \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
 clean:
 	rm -rf applications/*/*.elf \
 	rm -rf applications/*/*.hex \
