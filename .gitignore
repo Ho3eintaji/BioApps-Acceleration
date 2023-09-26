@@ -36,3 +36,6 @@ hw/asic/mem_power_switches/db/*
 hw/asic/blade/db/*
 hw/asic/coubertin/db/*
 hw/asic/fll/db/*
+
+# bash scripts
+run.sh

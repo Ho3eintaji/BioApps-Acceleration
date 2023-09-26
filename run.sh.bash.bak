@@ -1,0 +1,13 @@
+#! usr/bin/bash# This script is to be run in the Heepocrates base directory (aka BASE)
+	# It takes two arguments: $1 as application  name and $2 as flash load or exe
+
+echo Will run application $1
+
+
+# make application
+
+# flash load or exe
+
+# iceprog
+
+# show screen
