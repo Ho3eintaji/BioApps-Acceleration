@@ -351,6 +351,40 @@ applications/test_dma_power_gating/test_dma_power_gating.elf: applications/test_
 		-Wl,-Map=applications/test_dma_power_gating/test_dma_power_gating.map \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
+applications/test_dma_power_gating/test_dma_power_gating.flash_load.elf: applications/test_dma_power_gating/test_dma_power_gating.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link_flash_load.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT_FLASH_LOAD) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-Wl,-Map=applications/test_dma_power_gating/test_dma_power_gating.map \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+applications/test_dma_power_gating/test_dma_power_gating.flash_exec.elf: applications/test_dma_power_gating/test_dma_power_gating.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link_flash_exec.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT_FLASH_EXEC) \
+		$^ $(LIB_RUNTIME) \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-Wl,-Map=applications/test_dma_power_gating/test_dma_power_gating.map \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
 x_applications/spi_host_dma_power_gate_example/spi_host_dma_power_gate_example.flash_load.elf: x_applications/spi_host_dma_power_gate_example/spi_host_dma_power_gate_example.c
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
 		$(CUSTOM_GCC_FLAGS) \
