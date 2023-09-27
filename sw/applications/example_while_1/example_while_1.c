@@ -35,31 +35,20 @@ int main(int argc, char const *argv[])
     gpio_init(gpio_params, &gpio);
     gpio_output_set_enabled(&gpio, 4, true);
 
+     // Change frequency
+    fll_set_freq(&fll, 0.1*1000000);
+    fll_freq_real = fll_get_freq(&fll);
+    soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
+
+    
+
+
     while(1)
     {
-        // Change frequency
-        fll_set_freq(&fll, 150*1000000);
-        fll_freq_real = fll_get_freq(&fll);
-        soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
-
-        for(int i=0; i<1000; i++)
-            for(int i=0; i<10000; i++)
-                asm volatile("nop");
-
-        // Set GPIO 4 to 1
-        gpio_write(&gpio, 4, true);
-
-        // Change frequency
-        // fll_set_freq(&fll, 1*1000000);
-        fll_set_freq(&fll, 32768);
-        fll_freq_real = fll_get_freq(&fll);
-        soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
-
-        // Set GPIO 4 to 0
-        gpio_write(&gpio, 4, false);
-
-        for(int i=0; i<10000; i++)
-            asm volatile("nop");
+        // printf("Run\n");
+        // for(int i=0; i<10000; i++){
+        // // for(int i=0; i<10; i++){
+        //     asm volatile("nop");}
     }
 
     return 0;
