@@ -13,9 +13,11 @@
 #include "x-heep.h"
 
 // Choose what to test
-#define FLL_DEFAULT_VAL_TEST
+// #define FLL_DEFAULT_VAL_TEST
 #define FLL_OPEN_LOOP_TEST
-#define FLL_NORMAL_MODE_TEST
+// #define FLL_NORMAL_MODE_TEST
+
+// #define FLL_OPEN_LOOP_VALUES_TEST
 
 uint32_t fll_init(const fll_t *fll);
 static uint32_t fll_get_freq_from_mult_div(uint32_t mult_factor, uint32_t clk_div);
@@ -126,6 +128,27 @@ int main(void) {
     printf("OPEN LOOP: fll DCO input = %d\n", dco_input_default-i);
     printf("OPEN LOOP: fll_freq Hz   = %d\n", fll_freq);
   }
+
+  uint32_t dco_in = 174;
+  const uint32_t config2 = fll_create_config_1((fll_conf1_reg_t){
+      .mult_factor = fll_conf1.mult_factor,
+      .dco_input   = dco_in,
+      .clk_div     = fll_conf1.clk_div,
+      .lock_enable = fll_conf1.lock_enable,
+      .op_mode     = fll_conf1.op_mode
+    });
+    fll_conf1_set(&fll, config2);
+    fll_status = fll_status_get(&fll);
+    // Small delay to let the FLL settle
+    for (int j = 0; j < 1000; j++) {
+      asm volatile("nop");
+    }
+    // Update frequency in SoC controller otherwise devices using this value (e.g., uart) will not work
+    fll_freq = fll_get_freq(&fll);
+    soc_ctrl_set_frequency(&soc_ctrl, fll_freq);
+    printf("OPEN LOOP: DCO input = %d\n", dco_in);
+    printf("OPEN LOOP: fll freq   = %d\n", fll_freq);
+
   printf("FLL open loop mode working if you can read this and FLL frequency changed!\n");
 #endif // FLL_OPEN_LOOP_TEST
 
@@ -155,6 +178,19 @@ int main(void) {
   printf("FLL normal mode working if you can read this and FLL frequency changed!\n");
 
 #endif // FLL_NORMAL_MODE_TEST
+
+
+
+  // what I want is two modes
+  /* 
+  Measurement for transition from freq a to freq b.
+  In my case, it is 150 MHz to 32 KHz.
+  However, I can measure others.
+  */
+
+  // do the pre configurations
+
+  // set the freq to 150 MHz and then to 32 KHz
 
   return EXIT_SUCCESS;
 }
