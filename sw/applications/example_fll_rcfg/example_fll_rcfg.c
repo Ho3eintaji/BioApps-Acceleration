@@ -234,6 +234,9 @@ int main(void) {
 
   printf("FLL normal mode working if you can read this and FLL frequency changed!\n");
 
+
+
+
   while(1)
     {
         // Change frequency
@@ -312,10 +315,16 @@ int main(void) {
       .op_mode     = fll_conf1.op_mode
     });
 
+    // gpio_write(&gpio, 4, true);
+  // while(1);
+
   while(1)
     {
         // Change frequency (open loop)
+      // gpio_write(&gpio, 4, true);
         fll_conf1_set(&fll, config3);
+        // gpio_write(&gpio, 4, false);
+        gpio_write(&gpio, 4, true);
         fll_freq = fll_get_freq(&fll);
         soc_ctrl_set_frequency(&soc_ctrl, fll_freq);
         // fll_set_freq(&fll, 0.1*1000000);
@@ -344,10 +353,10 @@ int main(void) {
         // (open loop) stage
         fll_set_freq(&fll, 150*1000000);
         // gpio_write(&gpio, 4, false);
-         gpio_write(&gpio, 4, true);
+         // gpio_write(&gpio, 4, true);
         fll_freq_real = fll_get_freq(&fll);
         soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
-        gpio_write(&gpio, 4, false);
+        // gpio_write(&gpio, 4, false);
 
         // gpio_write(&gpio, 4, false);
 
