@@ -62,35 +62,73 @@ int main(int argc, char *argv[])
 
     // while(1);
 
+    for(int i=0; i<100000; i++)
+        asm volatile("nop"); 
+
+    printf("Hi\n");
 
 
 
-    // change frequency in the level of deep sleep
-    fll_conf1_reg_t fll_conf1 = fll_conf1_get(&fll);
-    fll_conf1.op_mode = 0;
-    uint32_t dco_inp = 170;
-  const uint32_t config3 = fll_create_config_1((fll_conf1_reg_t){
-      .mult_factor = fll_conf1.mult_factor,
-      .dco_input   = dco_inp,
-      .clk_div     = 0x2,
-      .lock_enable = fll_conf1.lock_enable,
-      .op_mode     = fll_conf1.op_mode
-    });
-      fll_conf1_set(&fll, config3);
-      for(int i=0; i<1000; i++)
-            asm volatile("nop");
-      fll_freq = fll_get_freq(&fll);
-      soc_ctrl_set_frequency(&soc_ctrl, fll_freq);
+
+  //   // change frequency in the level of deep sleep
+  //   fll_conf1_reg_t fll_conf1 = fll_conf1_get(&fll);
+  //   fll_conf1.op_mode = 0;
+  //   uint32_t dco_inp = 170;
+  // const uint32_t config3 = fll_create_config_1((fll_conf1_reg_t){
+  //     .mult_factor = fll_conf1.mult_factor,
+  //     .dco_input   = dco_inp,
+  //     .clk_div     = 0x2,
+  //     .lock_enable = fll_conf1.lock_enable,
+  //     .op_mode     = fll_conf1.op_mode
+  //   });
+  //     fll_conf1_set(&fll, config3);
+  //     for(int i=0; i<1000; i++)
+  //           asm volatile("nop");
+  //     fll_freq = fll_get_freq(&fll);
+  //     soc_ctrl_set_frequency(&soc_ctrl, fll_freq);
 
 
+    // gpio_write(&gpio, 4, true);
     // while(1);
+    uint32_t isoff = 0;
+
+  
 
 #ifdef PWR_GATE_PERIPH
     // Power-gate peripheral domain
     power_manager_counters_t power_manager_counters_periph;
+
+    // isoff = periph_power_domain_is_off(&power_manager_reg);
+    // printf ("Is it off: %d\n", isoff);
+
     power_gate_counters_init(&power_manager_counters_periph, 0, 0, 0, 0, 0, 0, 0, 0);
+    // gpio_write(&gpio, 4, true);
     power_gate_periph(&power_manager, kOff_e, &power_manager_counters_periph);
+    
+
+    while( periph_power_domain_is_off(&power_manager_reg) != 0);
+    // gpio_write(&gpio, 4, false);
+    // printf ("Is it off: %d\n", isoff);
+    // gpio_write(&gpio, 4, false);
+
+    gpio_write(&gpio, 4, true);
+
+    power_gate_periph(&power_manager, kOn_e, &power_manager_counters_periph);
+    while(periph_power_domain_is_off(&power_manager_reg));
+    // printf ("Is it off: %d\n", isoff);
+    gpio_write(&gpio, 4, false);
 #endif
+
+    // gpio_write(&gpio, 4, false);
+    // isoff = periph_power_domain_is_off(&power_manager_reg);
+    // // printf ("Is it off: %d\n", isoff);
+
+    while(1){
+      for(int i=0; i<100000; i++)
+        asm volatile("nop"); 
+    }
+
+    
 
 
 // #ifdef PWR_GATE_4_RAM_BANKS
@@ -105,7 +143,7 @@ int main(int argc, char *argv[])
 
     
 
-     // gpio_write(&gpio, 4, true);
+     // gpio_write(&gpio, 4, false);
 
      // while(1);
 
@@ -114,6 +152,7 @@ int main(int argc, char *argv[])
     CSR_CLEAR_BITS(CSR_REG_MSTATUS, 0x8);
     power_gate_core(&power_manager, kTimer_0_pm_e, &power_manager_counters_cpu);
     CSR_SET_BITS(CSR_REG_MSTATUS, 0x8);
+    gpio_write(&gpio, 4, false);
 
     return EXIT_SUCCESS;
 }

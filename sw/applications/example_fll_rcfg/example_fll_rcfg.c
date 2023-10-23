@@ -12,6 +12,10 @@
 #include "soc_ctrl.h"
 #include "x-heep.h"
 #include "gpio.h"
+#include "power_manager.h"
+
+
+
 
 // Choose what to test
 // #define FLL_DEFAULT_VAL_TEST
@@ -22,6 +26,10 @@
 #define FLL_RCFG_TEST_WITH_OPEN_LOOP
 
 // #define FLL_OPEN_LOOP_VALUES_TEST
+
+static const uint64_t kTickFreqHz = 1000 * 1000; // 1 MHz
+
+static power_manager_t power_manager;
 
 uint32_t fll_init(const fll_t *fll);
 static uint32_t fll_get_freq_from_mult_div(uint32_t mult_factor, uint32_t clk_div);
@@ -275,6 +283,34 @@ int main(void) {
 
 #ifdef FLL_RCFG_TEST_WITH_OPEN_LOOP
   printf("================ FLL NORMAL/LOCK MODE CHECK ================\n");
+// while(1);
+  // ========== power gating 
+
+  // Setup power_manager
+    mmio_region_t power_manager_reg = mmio_region_from_addr(POWER_MANAGER_START_ADDRESS);
+    power_manager.base_addr = power_manager_reg;
+    power_manager_counters_t power_manager_counters;
+    power_manager_counters_t power_manager_counters_cpu;
+
+  power_gate_counters_init(&power_manager_counters, 0, 0, 0, 0, 0, 0, 0, 0);
+  power_gate_counters_init(&power_manager_counters_cpu, 40, 40, 30, 30, 20, 20, 0, 0);
+  // Power-gate periph
+  power_gate_periph(&power_manager, kOff_e, &power_manager_counters);
+  power_gate_ram_block(&power_manager, 2, kOff_e, &power_manager_counters);
+  power_gate_ram_block(&power_manager, 3, kOff_e, &power_manager_counters);
+  power_gate_ram_block(&power_manager, 4, kOff_e, &power_manager_counters);
+  power_gate_ram_block(&power_manager, 5, kOff_e, &power_manager_counters);
+  power_gate_ram_block(&power_manager, 6, kOff_e, &power_manager_counters);
+  power_gate_ram_block(&power_manager, 7, kOff_e, &power_manager_counters);
+  // Power-gate CGRA logic
+  power_gate_external(&power_manager, 0, kOff_e, &power_manager_counters);
+  // Power-gate CGRA memories
+ power_gate_external(&power_manager, 1, kOff_e, &power_manager_counters);
+  // Power-gate Coubertin
+   power_gate_external(&power_manager, 2, kOff_e, &power_manager_counters) ;
+
+// while(1);
+
 
   // fll_freq = fll_init(&fll);
 
@@ -324,14 +360,14 @@ int main(void) {
       // gpio_write(&gpio, 4, true);
         fll_conf1_set(&fll, config3);
         // gpio_write(&gpio, 4, false);
-        gpio_write(&gpio, 4, true);
+        // gpio_write(&gpio, 4, true);
         fll_freq = fll_get_freq(&fll);
         soc_ctrl_set_frequency(&soc_ctrl, fll_freq);
         // fll_set_freq(&fll, 0.1*1000000);
         // fll_freq_real = fll_get_freq(&fll);
         // soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
 
-        gpio_write(&gpio, 4, false);
+        // gpio_write(&gpio, 4, false);
 
         for(int i=0; i<1000; i++)
             asm volatile("nop");
@@ -343,7 +379,9 @@ int main(void) {
         // fll_freq_real = fll_get_freq(&fll);
         // soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
 
-          // gpio_write(&gpio, 4, true);
+          gpio_write(&gpio, 4, true);
+
+          // while(1);
 
         // Change frequency 
         // (open loop) stage
@@ -356,9 +394,11 @@ int main(void) {
          // gpio_write(&gpio, 4, true);
         fll_freq_real = fll_get_freq(&fll);
         soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
-        // gpio_write(&gpio, 4, false);
+        gpio_write(&gpio, 4, false);
 
         // gpio_write(&gpio, 4, false);
+
+        while(1);
 
         for(int i=0; i<1000; i++)
             asm volatile("nop");

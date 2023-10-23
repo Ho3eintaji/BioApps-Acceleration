@@ -36,7 +36,7 @@ int main(int argc, char const *argv[])
     gpio_output_set_enabled(&gpio, 4, true);
 
      // Change frequency
-    fll_set_freq(&fll, 0.1*1000000);
+    fll_set_freq(&fll, 1*1000000);
     fll_freq_real = fll_get_freq(&fll);
     soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
 
