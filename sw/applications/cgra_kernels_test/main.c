@@ -45,7 +45,7 @@ void handler_irq_external(void) {
 int main(void) {
 
   PRINTF("Init CGRA context memory...\n");
-  cgra_cmem_init(cgra_imem_bistream, cgra_kem_bitstream);
+  cgra_cmem_init(cgra_imem_bistream, cgra_kmem_bitstream);
   PRINTF("\rdone\n");
 
   // Init the PLIC

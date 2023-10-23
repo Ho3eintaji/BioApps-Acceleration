@@ -10,7 +10,7 @@
 #define CGRA_WHILE1_75PERCENT  2
 #define CGRA_WHILE1_50PERCENT  3
 
-uint32_t cgra_kem_bitstream[CGRA_KMEM_SIZE] = {
+uint32_t cgra_kmem_bitstream[CGRA_KMEM_SIZE] = {
   0x0,
   0xf007,
   0xf407,
