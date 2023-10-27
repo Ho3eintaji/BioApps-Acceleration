@@ -19,11 +19,10 @@
 
 // Choose what to test
 // #define FLL_DEFAULT_VAL_TEST
-// #define FLL_NORMAL_MODE_TEST
-
 #define FLL_OPEN_LOOP_TEST
+// #define FLL_NORMAL_MODE_TEST
 // #define FLL_RCFG_TEST
-#define FLL_RCFG_TEST_WITH_OPEN_LOOP
+// #define FLL_RCFG_TEST_WITH_OPEN_LOOP
 
 // #define FLL_OPEN_LOOP_VALUES_TEST
 
@@ -144,17 +143,21 @@ int main(void) {
     fll_conf1_set(&fll, config1);
     fll_status = fll_status_get(&fll);
     // Small delay to let the FLL settle
-    for (int j = 0; j < 1000; j++) {
+    for (int j = 0; j < 10000; j++) {
       asm volatile("nop");
     }
     // Update frequency in SoC controller otherwise devices using this value (e.g., uart) will not work
     fll_freq = fll_get_freq(&fll);
     soc_ctrl_set_frequency(&soc_ctrl, fll_freq);
+    for (int j = 0; j < 10000; j++) {
+      asm volatile("nop");
+    }
     printf("OPEN LOOP: fll DCO input = %d\n", dco_input_default-i);
     printf("OPEN LOOP: fll_freq Hz   = %d\n", fll_freq);
   }
 
   uint32_t dco_in = 807;
+  dco_in = 170;
   const uint32_t config2 = fll_create_config_1((fll_conf1_reg_t){
       .mult_factor = fll_conf1.mult_factor,
       .dco_input   = dco_in,
@@ -172,12 +175,15 @@ int main(void) {
     fll_conf1_set(&fll, config2);
     fll_status = fll_status_get(&fll);
     // Small delay to let the FLL settle
-    for (int j = 0; j < 1000; j++) {
+    for (int j = 0; j < 10000; j++) {
       asm volatile("nop");
     }
     // Update frequency in SoC controller otherwise devices using this value (e.g., uart) will not work
     fll_freq = fll_get_freq(&fll);
     soc_ctrl_set_frequency(&soc_ctrl, fll_freq);
+    for (int j = 0; j < 10000; j++) {
+      asm volatile("nop");
+    }
     printf("OPEN LOOP: DCO input = %d\n", dco_in);
     printf("OPEN LOOP: fll freq   = %d\n", fll_freq);
 
@@ -197,8 +203,8 @@ int main(void) {
   printf("NORMAL MODE: fll_freq request Hz = %d\n", fll_freq);
   printf("NORMAL MODE: fll_freq real Hz    = %d\n", fll_freq_real);
 
-  // Set FLL to 250 MHz
-  fll_freq = fll_set_freq(&fll, 250000000);
+  // Set FLL to 150 MHz
+  fll_freq = fll_set_freq(&fll, 150000000);
 
   fll_freq_real = fll_get_freq(&fll);
 
@@ -242,9 +248,6 @@ int main(void) {
 
   printf("FLL normal mode working if you can read this and FLL frequency changed!\n");
 
-
-
-
   while(1)
     {
         // Change frequency
@@ -255,6 +258,8 @@ int main(void) {
         for(int i=0; i<1000; i++)
             asm volatile("nop");
         // printf("fll_freq real Hz    = %d\n", fll_freq_real);
+
+
 
         
         gpio_write(&gpio, 4, true);
@@ -274,7 +279,6 @@ int main(void) {
         for(int i=0; i<1000; i++)
             asm volatile("nop");
 
-        
 
          
     }
@@ -333,7 +337,8 @@ int main(void) {
 
   // printf("FLL normal mode working if you can read this and FLL frequency changed!\n");
 
-    uint32_t dco_inp = 170;
+    // uint32_t dco_inp = 170;
+   uint32_t dco_inp = 180;
   const uint32_t config3 = fll_create_config_1((fll_conf1_reg_t){
       .mult_factor = fll_conf1.mult_factor,
       .dco_input   = dco_inp,
@@ -357,12 +362,19 @@ int main(void) {
   while(1)
     {
         // Change frequency (open loop)
-      // gpio_write(&gpio, 4, true);
+      gpio_write(&gpio, 4, true);
         fll_conf1_set(&fll, config3);
         // gpio_write(&gpio, 4, false);
         // gpio_write(&gpio, 4, true);
         fll_freq = fll_get_freq(&fll);
+        // gpio_write(&gpio, 4, true);
+        // gpio_write(&gpio, 4, false);
         soc_ctrl_set_frequency(&soc_ctrl, fll_freq);
+        gpio_write(&gpio, 4, false);
+
+
+
+        // normal mode
         // fll_set_freq(&fll, 0.1*1000000);
         // fll_freq_real = fll_get_freq(&fll);
         // soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
@@ -379,30 +391,33 @@ int main(void) {
         // fll_freq_real = fll_get_freq(&fll);
         // soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
 
-          gpio_write(&gpio, 4, true);
+          
 
           // while(1);
-
+        // gpio_write(&gpio, 4, true);
         // Change frequency 
-        // (open loop) stage
+        // open loop stage
         fll_conf1_set(&fll, config4);
         // gpio_write(&gpio, 4, false);
         // gpio_write(&gpio, 4, true);
-        // (open loop) stage
+        // feedback stage
         fll_set_freq(&fll, 150*1000000);
         // gpio_write(&gpio, 4, false);
          // gpio_write(&gpio, 4, true);
         fll_freq_real = fll_get_freq(&fll);
+        // gpio_write(&gpio, 4, false);
+        // gpio_write(&gpio, 4, true);
         soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
-        gpio_write(&gpio, 4, false);
+        // gpio_write(&gpio, 4, false);
+
 
         // gpio_write(&gpio, 4, false);
 
-        while(1);
 
         for(int i=0; i<1000; i++)
             asm volatile("nop");
 
+        // while(1);
         printf("Freq    = %d\n", fll_freq_real);
 
 

@@ -51,9 +51,9 @@ int main(int argc, char *argv[])
 
     // Change frequency
     fll_set_freq(&fll, 150*1000000);
-    // fll_freq_real = fll_get_freq(&fll);
-    // soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
-    // freq_hz = soc_ctrl_get_frequency(&soc_ctrl);
+    fll_freq_real = fll_get_freq(&fll);
+    soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
+    freq_hz = soc_ctrl_get_frequency(&soc_ctrl);
 
     for(int i=0; i<1000; i++)
         asm volatile("nop");
@@ -69,12 +69,12 @@ int main(int argc, char *argv[])
     mmio_region_t timer_0_1_reg = mmio_region_from_addr(RV_TIMER_AO_START_ADDRESS);
     rv_timer_init(timer_0_1_reg, (rv_timer_config_t){.hart_count = 1, .comparator_count = 1}, &timer_0_1);
     rv_timer_tick_params_t tick_params;
-    rv_timer_approximate_tick_params(freq_hz, kTickFreqHz, &tick_params);
+    rv_timer_approximate_tick_params(150*1000000, kTickFreqHz, &tick_params);
 
-    uint32_t isoff = 0;
 
-    while(1){
-        gpio_write(&gpio, 4, false);
+    // while(1){
+
+        printf("Hello\n");
 
         // Init cpu_subsystem's counters
         if (power_gate_counters_init(&power_manager_counters, 0, 0, 0, 0, 0, 0, 0, 0) != kPowerManagerOk_e)
@@ -82,21 +82,18 @@ int main(int argc, char *argv[])
             printf("Error: power manager fail. Check the reset and powergate counters value\n");
             return EXIT_FAILURE;
         }
-
         if (power_gate_counters_init(&power_manager_counters_cpu, 40, 40, 30, 30, 20, 20, 0, 0) != kPowerManagerOk_e)
         {
             printf("Error: power manager fail. Check the reset and powergate counters value\n");
             return EXIT_FAILURE;
         }
 
-         gpio_write(&gpio, 4, true);
         // Power-gate periph
         if (power_gate_periph(&power_manager, kOff_e, &power_manager_counters) != kPowerManagerOk_e)
         {
             printf("Error: power manager fail.\n");
             return EXIT_FAILURE;
         }
-        gpio_write(&gpio, 4, false);
 
         // Power-gate ram blocks 2 to 9
         if (power_gate_ram_block(&power_manager, 2, kOff_e, &power_manager_counters) != kPowerManagerOk_e)
@@ -130,10 +127,9 @@ int main(int argc, char *argv[])
             return EXIT_FAILURE;
         }
 
-        isoff = periph_power_domain_is_off(&power_manager);
-        printf ("Is it off: %d\n", isoff);
+        // isoff = periph_power_domain_is_off(&power_manager);
+        // printf ("Is it off: %d\n", isoff);
         
-        // gpio_write(&gpio, 4, true);
         // Power-gate CGRA logic
         if (power_gate_external(&power_manager, 0, kOff_e, &power_manager_counters) != kPowerManagerOk_e)
         {
@@ -155,7 +151,6 @@ int main(int argc, char *argv[])
             printf("Error: power manager fail.\n");
             return EXIT_FAILURE;
         }
-        // gpio_write(&gpio, 4, false);
 
         // Power-gate core and wake-up due to timer_0
         rv_timer_set_tick_params(&timer_0_1, 0, tick_params);
@@ -237,11 +232,7 @@ int main(int argc, char *argv[])
             return EXIT_FAILURE;
         }
 
-        // gpio_write(&gpio, 4, false);
-
-        printf("In while\n");
-
-    }
+    // }
 
     /* write something to stdout */
     printf("Success.\n");
