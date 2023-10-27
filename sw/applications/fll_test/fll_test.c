@@ -16,6 +16,7 @@
 #define FLL_DEFAULT_VAL_TEST
 #define FLL_OPEN_LOOP_TEST
 #define FLL_NORMAL_MODE_TEST
+#define PRINT_FLL_DEFAULT_VAL_TEST
 
 uint32_t fll_init(const fll_t *fll);
 static uint32_t fll_get_freq_from_mult_div(uint32_t mult_factor, uint32_t clk_div);
@@ -91,7 +92,7 @@ int main(void) {
   uint32_t dco_input_default = 0x158; // dco input:0x158 (344) ~= 50MHz
 
   // Enable open loop mode
-  // fll_freq = fll_set_freq(&fll, 50000000);
+  fll_freq = fll_set_freq(&fll, 50000000);
   fll_conf1.op_mode = 0;
   fll_conf1_set(&fll, fll_conf1.raw);
   fll_conf1.dco_input = dco_input_default;
