@@ -29,8 +29,8 @@ uint32_t fll_freq, fll_freq_real;
 fll_t fll;
 soc_ctrl_t soc_ctrl;
 uint32_t fll_status;
-uint32_t config_fll_ol_low;
-uint32_t config_fll_ol_high;
+// uint32_t config_fll_ol_low;
+// uint32_t config_fll_ol_high;
 const uint64_t TIMER_FREQ = 0.1*1000000; // 100 KHz
 const uint64_t SYS_FREQ = 150*1000000; //MHz
 gpio_t gpio;
@@ -48,10 +48,8 @@ int main(int argc, char const *argv[])
     */ 
 
     /*
-     * ======================
-     * == Power Manager =====
-     * ======================
-    */ 
+     * Power Manager 
+     */ 
     // 1. Setting up power manager
     mmio_region_t power_manager_reg = mmio_region_from_addr(POWER_MANAGER_START_ADDRESS);
     power_manager.base_addr = power_manager_reg;
@@ -61,37 +59,14 @@ int main(int argc, char const *argv[])
     power_gate_counters_init(&power_manager_counters_cpu, 40, 40, 30, 30, 20, 20, 0, 0);
 
     /*
-     * ============
-     * == FLL =====
-     * ============
-    */ 
+     * FLL and SoC controller 
+     */ 
     // 2.1 FLL peripheral structure to access the registers
     fll.base_addr = mmio_region_from_addr((uintptr_t)FLL_START_ADDRESS);
     fll_init(&fll);
     fll_status = fll_status_get(&fll);
     soc_ctrl.base_addr = mmio_region_from_addr((uintptr_t)SOC_CTRL_START_ADDRESS);
 
-    // 2.2. Enable open loop mode :)
-    fll_conf1_reg_t fll_conf1 = fll_conf1_get(&fll);
-    fll_conf1.op_mode = 0;
-    // fll_conf1_set(&fll, fll_conf1.raw);
-
-
-    // 2.3 Values for openloop switching
-    config_fll_ol_low = fll_create_config_1((fll_conf1_reg_t){
-        .mult_factor = fll_conf1.mult_factor,
-        .dco_input   = 170,
-        .clk_div     = 0x2,
-        .lock_enable = fll_conf1.lock_enable,
-        .op_mode     = fll_conf1.op_mode
-    });
-    config_fll_ol_high = fll_create_config_1((fll_conf1_reg_t){
-        .mult_factor = fll_conf1.mult_factor,
-        .dco_input   = 807,
-        .clk_div     = 0x2,
-        .lock_enable = fll_conf1.lock_enable,
-        .op_mode     = fll_conf1.op_mode
-    });
 
     //2.4 Set default app frequency
     fll_set_freq(&fll, SYS_FREQ);
@@ -100,6 +75,11 @@ int main(int argc, char const *argv[])
     }
     fll_freq_real = fll_get_freq(&fll);
     soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
+
+    /*
+     * Energy modes
+     */
+    init_ene_modes(&power_manager, &fll, &soc_ctrl, SYS_FREQ);
 
     /*
      * ============
@@ -203,58 +183,10 @@ int main(int argc, char const *argv[])
 
     /*
      * ===================
-     * == Power Gate =====
+     * Sleep mode
      * ===================
     */
-    // gpio_write(&gpio, PIN_TRIGGER, true);
-    // 1.1. Power gating peripheral domain
-    power_gate_periph(&power_manager, kOff_e, &power_manager_counters);
-    // 1.2. Power gating memory banks
-    power_gate_ram_block(&power_manager, 2, kOff_e, &power_manager_counters);
-    power_gate_ram_block(&power_manager, 3, kOff_e, &power_manager_counters);
-    power_gate_ram_block(&power_manager, 4, kOff_e, &power_manager_counters);
-    power_gate_ram_block(&power_manager, 5, kOff_e, &power_manager_counters);
-    power_gate_ram_block(&power_manager, 6, kOff_e, &power_manager_counters);
-    power_gate_ram_block(&power_manager, 7, kOff_e, &power_manager_counters);
-    // 1.3.1. Power gating CGRA logic
-    power_gate_external(&power_manager, 0, kOff_e, &power_manager_counters);
-    // 1.3.2. Power gating CGRA memories
-    power_gate_external(&power_manager, 1, kOff_e, &power_manager_counters);
-    // 1.3.3. Power gating Coubertin
-    power_gate_external(&power_manager, 2, kOff_e, &power_manager_counters);
-    gpio_write(&gpio, PIN_TRIGGER, true); 
-
-    /*
-     * =======================
-     * == Power Gate Core ====
-     * =======================
-    */
-    CSR_CLEAR_BITS(CSR_REG_MSTATUS, 0x8);
-    power_gate_core(&power_manager, kTimer_0_pm_e, &power_manager_counters_cpu); //todo: remove
-    CSR_SET_BITS(CSR_REG_MSTATUS, 0x8);
-
-    /*
-     * ===================
-     * == Power On =======
-     * ===================
-    */
-    gpio_write(&gpio, PIN_TRIGGER, false);
-    // 1.1. Power on peripheral domain
-    power_gate_periph(&power_manager, kOn_e, &power_manager_counters);
-    // 1.2. Power on memory banks
-    power_gate_ram_block(&power_manager, 2, kOn_e, &power_manager_counters);
-    power_gate_ram_block(&power_manager, 3, kOn_e, &power_manager_counters);
-    power_gate_ram_block(&power_manager, 4, kOn_e, &power_manager_counters);
-    power_gate_ram_block(&power_manager, 5, kOn_e, &power_manager_counters);
-    power_gate_ram_block(&power_manager, 6, kOn_e, &power_manager_counters);
-    power_gate_ram_block(&power_manager, 7, kOn_e, &power_manager_counters);
-    // 1.3.1. Power on CGRA logic
-    power_gate_external(&power_manager, 0, kOn_e, &power_manager_counters);
-    // 1.3.2. Power on CGRA memories
-    power_gate_external(&power_manager, 1, kOn_e, &power_manager_counters);
-    // 1.3.3. Power on Coubertin
-    power_gate_external(&power_manager, 2, kOn_e, &power_manager_counters);
-    // gpio_write(&gpio, PIN_TRIGGER, false);
+    en_sleep_mode(&power_manager, &power_manager_counters , &power_manager_counters_cpu);
 
     /*
      * ============
@@ -293,65 +225,68 @@ int main(int argc, char const *argv[])
     for (int j = 0; j < 10000000; j++) {
       asm volatile("nop");
     }
-    /*
-     * ===================
-     * == Power Gate =====
-     * ===================
-    */
-    power_gate_periph(&power_manager, kOff_e, &power_manager_counters); // 1.1. Power gating peripheral domain
-    power_gate_ram_block(&power_manager, 2, kOff_e, &power_manager_counters); // 1.2. Power gating memory banks
-    power_gate_ram_block(&power_manager, 3, kOff_e, &power_manager_counters);
-    power_gate_ram_block(&power_manager, 4, kOff_e, &power_manager_counters);
-    power_gate_ram_block(&power_manager, 5, kOff_e, &power_manager_counters);
-    power_gate_ram_block(&power_manager, 6, kOff_e, &power_manager_counters);
-    power_gate_ram_block(&power_manager, 7, kOff_e, &power_manager_counters);
-    power_gate_external(&power_manager, 0, kOff_e, &power_manager_counters); // 1.3.1. Power gating CGRA logic
-    power_gate_external(&power_manager, 1, kOff_e, &power_manager_counters); // 1.3.2. Power gating CGRA memories
-    power_gate_external(&power_manager, 2, kOff_e, &power_manager_counters); // 1.3.3. Power gating Coubertin
+
+    en_deep_sleep_mode(&power_manager, &power_manager_counters , &power_manager_counters_cpu, &fll, &soc_ctrl);
+
     // /*
-    //  * =====================
-    //  * == FLL, Low Freq ====
-    //  * =====================
+    //  * ===================
+    //  * == Power Gate =====
+    //  * ===================
     // */
-    // fll_conf1_set(&fll, config_fll_ol_low);     //open loop
+    // power_gate_periph(&power_manager, kOff_e, &power_manager_counters); // 1.1. Power gating peripheral domain
+    // power_gate_ram_block(&power_manager, 2, kOff_e, &power_manager_counters); // 1.2. Power gating memory banks
+    // power_gate_ram_block(&power_manager, 3, kOff_e, &power_manager_counters);
+    // power_gate_ram_block(&power_manager, 4, kOff_e, &power_manager_counters);
+    // power_gate_ram_block(&power_manager, 5, kOff_e, &power_manager_counters);
+    // power_gate_ram_block(&power_manager, 6, kOff_e, &power_manager_counters);
+    // power_gate_ram_block(&power_manager, 7, kOff_e, &power_manager_counters);
+    // power_gate_external(&power_manager, 0, kOff_e, &power_manager_counters); // 1.3.1. Power gating CGRA logic
+    // power_gate_external(&power_manager, 1, kOff_e, &power_manager_counters); // 1.3.2. Power gating CGRA memories
+    // power_gate_external(&power_manager, 2, kOff_e, &power_manager_counters); // 1.3.3. Power gating Coubertin
+    // // /*
+    // //  * =====================
+    // //  * == FLL, Low Freq ====
+    // //  * =====================
+    // // */
+    // // fll_conf1_set(&fll, config_fll_ol_low);     //open loop
     // fll_freq = fll_get_freq(&fll);
-    // soc_ctrl_set_frequency(&soc_ctrl, fll_freq);
-    /*
-     * =======================
-     * == Power Gate Core ====
-     * =======================
-    */
-    // rv_timer_arm(&timer_0_1, 0, 0, 3000);   //changing timer parameter because frequency has changed(?!)
-    // rv_timer_counter_set_enabled(&timer_0_1, 0, kRvTimerEnabled); //start timer here
-    CSR_CLEAR_BITS(CSR_REG_MSTATUS, 0x8);
-    power_gate_core_dpslp(&power_manager, kTimer_0_pm_e, &power_manager_counters_cpu); //todo: remove
-    CSR_SET_BITS(CSR_REG_MSTATUS, 0x8);
-    // gpio_write(&gpio, PIN_TRIGGER, false);
+    // // soc_ctrl_set_frequency(&soc_ctrl, fll_freq);
     // /*
-    //  * =====================
-    //  * == FLL, High Freq ===
-    //  * =====================
+    //  * =======================
+    //  * == Power Gate Core ====
+    //  * =======================
     // */
-    // fll_conf1_set(&fll, config_fll_ol_high);    // open loop step
-    // fll_set_freq(&fll, SYS_FREQ);               // feedback step
-    // fll_freq_real = fll_get_freq(&fll);
-    // soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
-    /*
-     * ===================
-     * == Power On =======
-     * ===================
-    */
-    power_gate_periph(&power_manager, kOn_e, &power_manager_counters); // 1.1. Power on peripheral domain
-    power_gate_ram_block(&power_manager, 2, kOn_e, &power_manager_counters); // 1.2. Power on memory banks
-    power_gate_ram_block(&power_manager, 3, kOn_e, &power_manager_counters);
-    power_gate_ram_block(&power_manager, 4, kOn_e, &power_manager_counters);
-    power_gate_ram_block(&power_manager, 5, kOn_e, &power_manager_counters);
-    power_gate_ram_block(&power_manager, 6, kOn_e, &power_manager_counters);
-    power_gate_ram_block(&power_manager, 7, kOn_e, &power_manager_counters);
-    power_gate_external(&power_manager, 0, kOn_e, &power_manager_counters); // 1.3.1. Power on CGRA logic
-    power_gate_external(&power_manager, 1, kOn_e, &power_manager_counters); // 1.3.2. Power on CGRA memories
-    power_gate_external(&power_manager, 2, kOn_e, &power_manager_counters); // 1.3.3. Power on Coubertin
-    gpio_write(&gpio, PIN_TRIGGER, false);
+    // // rv_timer_arm(&timer_0_1, 0, 0, 3000);   //changing timer parameter because frequency has changed(?!)
+    // // rv_timer_counter_set_enabled(&timer_0_1, 0, kRvTimerEnabled); //start timer here
+    // CSR_CLEAR_BITS(CSR_REG_MSTATUS, 0x8);
+    // power_gate_core_dpslp(&power_manager, kTimer_0_pm_e, &power_manager_counters_cpu); //todo: remove
+    // CSR_SET_BITS(CSR_REG_MSTATUS, 0x8);
+    // // gpio_write(&gpio, PIN_TRIGGER, false);
+    // // /*
+    // //  * =====================
+    // //  * == FLL, High Freq ===
+    // //  * =====================
+    // // */
+    // // fll_conf1_set(&fll, config_fll_ol_high);    // open loop step
+    // // fll_set_freq(&fll, SYS_FREQ);               // feedback step
+    // // fll_freq_real = fll_get_freq(&fll);
+    // // soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
+    // /*
+    //  * ===================
+    //  * == Power On =======
+    //  * ===================
+    // */
+    // power_gate_periph(&power_manager, kOn_e, &power_manager_counters); // 1.1. Power on peripheral domain
+    // power_gate_ram_block(&power_manager, 2, kOn_e, &power_manager_counters); // 1.2. Power on memory banks
+    // power_gate_ram_block(&power_manager, 3, kOn_e, &power_manager_counters);
+    // power_gate_ram_block(&power_manager, 4, kOn_e, &power_manager_counters);
+    // power_gate_ram_block(&power_manager, 5, kOn_e, &power_manager_counters);
+    // power_gate_ram_block(&power_manager, 6, kOn_e, &power_manager_counters);
+    // power_gate_ram_block(&power_manager, 7, kOn_e, &power_manager_counters);
+    // power_gate_external(&power_manager, 0, kOn_e, &power_manager_counters); // 1.3.1. Power on CGRA logic
+    // power_gate_external(&power_manager, 1, kOn_e, &power_manager_counters); // 1.3.2. Power on CGRA memories
+    // power_gate_external(&power_manager, 2, kOn_e, &power_manager_counters); // 1.3.3. Power on Coubertin
+    // gpio_write(&gpio, PIN_TRIGGER, false);
     /*
      * ============
      * == App =====
