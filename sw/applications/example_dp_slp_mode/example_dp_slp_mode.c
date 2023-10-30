@@ -29,8 +29,6 @@ uint32_t fll_freq, fll_freq_real;
 fll_t fll;
 soc_ctrl_t soc_ctrl;
 uint32_t fll_status;
-// uint32_t config_fll_ol_low;
-// uint32_t config_fll_ol_high;
 const uint64_t TIMER_FREQ = 0.1*1000000; // 100 KHz
 const uint64_t SYS_FREQ = 150*1000000; //MHz
 gpio_t gpio;
@@ -42,15 +40,14 @@ static power_manager_t power_manager;
 int main(int argc, char const *argv[])
 {
     /*
-     * ===================================================================
-     * =================== Configuration =================================
-     * ===================================================================
+     * ==============
+     * Configuration 
+     * ==============
     */ 
 
     /*
      * Power Manager 
      */ 
-    // 1. Setting up power manager
     mmio_region_t power_manager_reg = mmio_region_from_addr(POWER_MANAGER_START_ADDRESS);
     power_manager.base_addr = power_manager_reg;
     power_manager_counters_t power_manager_counters;
@@ -82,11 +79,8 @@ int main(int argc, char const *argv[])
     init_ene_modes(&power_manager, &fll, &soc_ctrl, SYS_FREQ);
 
     /*
-     * ============
-     * == GPIO ====
-     * ============
-    */ 
-    // 3. Setup GPIO
+     * Setup GPIO 
+     */ 
     gpio_params_t gpio_params;
     gpio_params.base_addr = mmio_region_from_addr((uintptr_t)GPIO_AO_START_ADDRESS);
     gpio_init(gpio_params, &gpio);
@@ -94,10 +88,8 @@ int main(int argc, char const *argv[])
     gpio_write(&gpio, PIN_TRIGGER, false);
 
     /*
-     * =============================
-     * == Initialize Wakeup Timer ==
-     * =============================
-    */ 
+     * Initialize Wakeup Timer 
+     */ 
     // Setup rv_timer_0_1
     mmio_region_t timer_0_1_reg = mmio_region_from_addr(RV_TIMER_AO_START_ADDRESS);
     rv_timer_init(timer_0_1_reg, (rv_timer_config_t){.hart_count = 1, .comparator_count = 1}, &timer_0_1);
@@ -106,198 +98,64 @@ int main(int argc, char const *argv[])
     if (tick_params.prescale==0){
         printf("Timer approximate function was not able to set a correct value prescale");
     }
-
-    /*
-     * ===========================================================================
-     * =================== Staying idle ==========================================
-     * ===========================================================================
-    */ 
-    #ifdef PUT_IDLE
-
-    //todo: its not working, I should check later
-
-    /*
-     * ==========================
-     * == Setup Wakeup Timer ====
-     * ==========================
-    */
     rv_timer_set_tick_params(&timer_0_1, 0, tick_params);
     rv_timer_irq_enable(&timer_0_1, 0, 0, kRvTimerEnabled);
+
+    /* App */ 
+    for (int j = 0; j < 10000000; j++) asm volatile("nop");
+
+    /*
+     * =========
+     * Idle 
+     * =========
+    */ 
+    #ifdef PUT_IDLE
+    /* todo: its not working, I should check later */
+    /* Wakeup time */
     rv_timer_arm(&timer_0_1, 0, 0, 33340);
     rv_timer_counter_set_enabled(&timer_0_1, 0, kRvTimerEnabled);
-    /*
-     * ============
-     * == App =====
-     * ============
-    */ 
-    for (int j = 0; j < 10000000; j++) {
-      asm volatile("nop");
-    }
-    /*
-     * =====================
-     * == Staying idle =====
-     * =====================
-    */   
-    gpio_write(&gpio, PIN_TRIGGER, true);
+    /* Staying idle */   
     // wait_for_interrupt();
     while(1){
         asm volatile("nop");
     }
-    gpio_write(&gpio, PIN_TRIGGER, false);
-    /*
-     * ============
-     * == App =====
-     * ============
-    */ 
-    for (int j = 0; j < 10000000; j++) {
-      asm volatile("nop");
-    }
-
     #endif
 
     /*
-     * ===========================================================================
-     * =================== Enabling Sleep Mode ===================================
-     * ===========================================================================
-    */ 
-    #ifdef PUT_SLEEP
-
-    /*
-     * ==========================
-     * == Setup Wakeup Timer ====
-     * ==========================
-    */
-    rv_timer_set_tick_params(&timer_0_1, 0, tick_params);
-    rv_timer_irq_enable(&timer_0_1, 0, 0, kRvTimerEnabled);
-    rv_timer_arm(&timer_0_1, 0, 0, 33340);
-    rv_timer_counter_set_enabled(&timer_0_1, 0, kRvTimerEnabled);
-
-    /*
-     * ============
-     * == App =====
-     * ============
-    */ 
-    for (int j = 0; j < 10000000; j++) {
-      asm volatile("nop");
-    }
-
-    /*
-     * ===================
+     * ===========
      * Sleep mode
-     * ===================
-    */
+     * ===========
+     */
+    #ifdef PUT_SLEEP
+    /* Wakeup time */
+    rv_timer_arm(&timer_0_1, 0, 0, 100000);
+    rv_timer_counter_set_enabled(&timer_0_1, 0, kRvTimerEnabled);
+    /* Sleep */
     en_sleep_mode(&power_manager, &power_manager_counters , &power_manager_counters_cpu);
-
-    /*
-     * ============
-     * == App =====
-     * ============
-    */ 
-    for (int j = 0; j < 10000000; j++) {
-      asm volatile("nop");
-    }
-
     #endif
 
-
     /*
-     * ===========================================================================
-     * =================== Enabling Deep Sleep Mode ==============================
-     * ===========================================================================
-    */ 
+     * ===============
+     * Deep sleep mode
+     * ===============
+     */
     #ifdef PUT_DEEP_SLEEP
-    /*
-     * ==========================
-     * == Setup Wakeup Timer ====
-     * ==========================
-    */
+    /* Setup Wakeup Timer */
     rv_timer_approximate_tick_params(SYS_FREQ, SYS_FREQ, &tick_params); //add it because I lower the freq
     rv_timer_set_tick_params(&timer_0_1, 0, tick_params);
     rv_timer_irq_enable(&timer_0_1, 0, 0, kRvTimerEnabled);
-    // rv_timer_arm(&timer_0_1, 0, 0, 33340);
-    // rv_timer_arm(&timer_0_1, 0, 0, 100000);
-    // rv_timer_counter_set_enabled(&timer_0_1, 0, kRvTimerEnabled); //todo: remove because timer freq is getting different
-    /*
-     * ============
-     * == App =====
-     * ============
-    */ 
-    for (int j = 0; j < 10000000; j++) {
-      asm volatile("nop");
-    }
-
+    /* Deep sleep mode*/
+    /* 
+     * Setting timer to wakeup system 
+     * todo: remove for measurement purpose
+     */
+    rv_timer_arm(&timer_0_1, 0, 0, 1);   //changing timer parameter because frequency has changed(?!)
+    rv_timer_counter_set_enabled(&timer_0_1, 0, kRvTimerEnabled); //start timer here
     en_deep_sleep_mode(&power_manager, &power_manager_counters , &power_manager_counters_cpu, &fll, &soc_ctrl);
-
-    // /*
-    //  * ===================
-    //  * == Power Gate =====
-    //  * ===================
-    // */
-    // power_gate_periph(&power_manager, kOff_e, &power_manager_counters); // 1.1. Power gating peripheral domain
-    // power_gate_ram_block(&power_manager, 2, kOff_e, &power_manager_counters); // 1.2. Power gating memory banks
-    // power_gate_ram_block(&power_manager, 3, kOff_e, &power_manager_counters);
-    // power_gate_ram_block(&power_manager, 4, kOff_e, &power_manager_counters);
-    // power_gate_ram_block(&power_manager, 5, kOff_e, &power_manager_counters);
-    // power_gate_ram_block(&power_manager, 6, kOff_e, &power_manager_counters);
-    // power_gate_ram_block(&power_manager, 7, kOff_e, &power_manager_counters);
-    // power_gate_external(&power_manager, 0, kOff_e, &power_manager_counters); // 1.3.1. Power gating CGRA logic
-    // power_gate_external(&power_manager, 1, kOff_e, &power_manager_counters); // 1.3.2. Power gating CGRA memories
-    // power_gate_external(&power_manager, 2, kOff_e, &power_manager_counters); // 1.3.3. Power gating Coubertin
-    // // /*
-    // //  * =====================
-    // //  * == FLL, Low Freq ====
-    // //  * =====================
-    // // */
-    // // fll_conf1_set(&fll, config_fll_ol_low);     //open loop
-    // fll_freq = fll_get_freq(&fll);
-    // // soc_ctrl_set_frequency(&soc_ctrl, fll_freq);
-    // /*
-    //  * =======================
-    //  * == Power Gate Core ====
-    //  * =======================
-    // */
-    // // rv_timer_arm(&timer_0_1, 0, 0, 3000);   //changing timer parameter because frequency has changed(?!)
-    // // rv_timer_counter_set_enabled(&timer_0_1, 0, kRvTimerEnabled); //start timer here
-    // CSR_CLEAR_BITS(CSR_REG_MSTATUS, 0x8);
-    // power_gate_core_dpslp(&power_manager, kTimer_0_pm_e, &power_manager_counters_cpu); //todo: remove
-    // CSR_SET_BITS(CSR_REG_MSTATUS, 0x8);
-    // // gpio_write(&gpio, PIN_TRIGGER, false);
-    // // /*
-    // //  * =====================
-    // //  * == FLL, High Freq ===
-    // //  * =====================
-    // // */
-    // // fll_conf1_set(&fll, config_fll_ol_high);    // open loop step
-    // // fll_set_freq(&fll, SYS_FREQ);               // feedback step
-    // // fll_freq_real = fll_get_freq(&fll);
-    // // soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
-    // /*
-    //  * ===================
-    //  * == Power On =======
-    //  * ===================
-    // */
-    // power_gate_periph(&power_manager, kOn_e, &power_manager_counters); // 1.1. Power on peripheral domain
-    // power_gate_ram_block(&power_manager, 2, kOn_e, &power_manager_counters); // 1.2. Power on memory banks
-    // power_gate_ram_block(&power_manager, 3, kOn_e, &power_manager_counters);
-    // power_gate_ram_block(&power_manager, 4, kOn_e, &power_manager_counters);
-    // power_gate_ram_block(&power_manager, 5, kOn_e, &power_manager_counters);
-    // power_gate_ram_block(&power_manager, 6, kOn_e, &power_manager_counters);
-    // power_gate_ram_block(&power_manager, 7, kOn_e, &power_manager_counters);
-    // power_gate_external(&power_manager, 0, kOn_e, &power_manager_counters); // 1.3.1. Power on CGRA logic
-    // power_gate_external(&power_manager, 1, kOn_e, &power_manager_counters); // 1.3.2. Power on CGRA memories
-    // power_gate_external(&power_manager, 2, kOn_e, &power_manager_counters); // 1.3.3. Power on Coubertin
-    // gpio_write(&gpio, PIN_TRIGGER, false);
-    /*
-     * ============
-     * == App =====
-     * ============
-    */ 
-    for (int j = 0; j < 10000000; j++) {
-      asm volatile("nop");
-    }
-
     #endif
 
+    /* App */ 
+    for (int j = 0; j < 10000000; j++) asm volatile("nop");
 
     /* write something to stdout */
     printf("Success.\n");
