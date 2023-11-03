@@ -128,8 +128,10 @@ int main(int argc, char const *argv[])
      */
     #ifdef PUT_SLEEP
     /* Wakeup time */
-    rv_timer_arm(&timer_0_1, 0, 0, 100000);
-    rv_timer_counter_set_enabled(&timer_0_1, 0, kRvTimerEnabled);
+    rv_timer_approximate_tick_params(SYS_FREQ, SYS_FREQ, &tick_params); //add it because I lower the freq
+    rv_timer_set_tick_params(&timer_0_1, 0, tick_params);
+    // rv_timer_arm(&timer_0_1, 0, 0, 1);
+    // rv_timer_counter_set_enabled(&timer_0_1, 0, kRvTimerEnabled);
     /* Sleep */
     en_sleep_mode(&power_manager, &power_manager_counters , &power_manager_counters_cpu);
     #endif
@@ -144,14 +146,12 @@ int main(int argc, char const *argv[])
     rv_timer_approximate_tick_params(SYS_FREQ, SYS_FREQ, &tick_params); //add it because I lower the freq
     rv_timer_set_tick_params(&timer_0_1, 0, tick_params);
     rv_timer_irq_enable(&timer_0_1, 0, 0, kRvTimerEnabled);
-    /* Deep sleep mode*/
-    /* 
-     * Setting timer to wakeup system 
-     * todo: remove for measurement purpose
-     */
-    rv_timer_arm(&timer_0_1, 0, 0, 1);   //changing timer parameter because frequency has changed(?!)
+    rv_timer_arm(&timer_0_1, 0, 0, 1000);   //changing timer parameter because frequency has changed(?!)
     rv_timer_counter_set_enabled(&timer_0_1, 0, kRvTimerEnabled); //start timer here
+    /* Deep sleep mode*/
+    gpio_write(&gpio, PIN_TRIGGER, true);
     en_deep_sleep_mode(&power_manager, &power_manager_counters , &power_manager_counters_cpu, &fll, &soc_ctrl);
+    gpio_write(&gpio, PIN_TRIGGER, false);
     #endif
 
     /* App */ 
