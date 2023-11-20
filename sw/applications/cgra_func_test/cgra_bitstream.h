@@ -8,7 +8,7 @@
 // Kernel 0 => NULL
 #define CGRA_FUNC_TEST 1
 
-uint32_t cgra_kem_bitstream[CGRA_KMEM_SIZE] = {
+uint32_t cgra_kmem_bitstream[CGRA_KMEM_SIZE] = {
   0x0,
   0xf01f,
   0x0,
