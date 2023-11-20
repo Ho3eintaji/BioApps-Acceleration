@@ -21,8 +21,7 @@
 // #define FLL_DEFAULT_VAL_TEST
 #define FLL_OPEN_LOOP_TEST
 // #define FLL_NORMAL_MODE_TEST
-// #define FLL_RCFG_TEST
-// #define FLL_RCFG_TEST_WITH_OPEN_LOOP
+// #define FLL_TWO_STEP_RCFG_TEST
 
 // #define FLL_OPEN_LOOP_VALUES_TEST
 
@@ -107,14 +106,7 @@ int main(void) {
 
 #ifdef FLL_OPEN_LOOP_TEST
   printf("================ FLL OPEN LOOP / STANDALONE MODE CHECK ================\n");
-  // FLL Open loop FLL DCO code transfer function (in typical case)
-  // !!! FLL Documentation inverts the formulas for {272:360} and {360:31023} !!!
-  // dco_input < 272  : freq = 0.000001
-  // dco_input < 360  : freq =  1068.966 - 8.626*dco_input + 0.017612*(dco_input**2.0)
-  // dco_input >= 360 : freq = -1586.080 + 5.518*dco_input + -0.001191*(dco_input**2.0)
-  // FLL Standalone mode (open loop) DCO input code ramp-down
-
-  uint32_t dco_input_default = 0x158; // dco input:0x158 (344) ~= 50MHz
+  uint32_t dco_input_default = 0x158; 
 
   // Enable open loop mode
   // fll_freq = fll_set_freq(&fll, 50000000);
@@ -165,13 +157,7 @@ int main(void) {
       .lock_enable = fll_conf1.lock_enable,
       .op_mode     = fll_conf1.op_mode
     });
-  // const uint32_t config2 = fll_create_config_1((fll_conf1_reg_t){
-  //     .mult_factor = fll_conf1.mult_factor,
-  //     .dco_input   = dco_in,
-  //     .clk_div     = 0x8,
-  //     .lock_enable = fll_conf1.lock_enable,
-  //     .op_mode     = fll_conf1.op_mode
-  //   });
+
     fll_conf1_set(&fll, config2);
     fll_status = fll_status_get(&fll);
     // Small delay to let the FLL settle
@@ -186,159 +172,29 @@ int main(void) {
     }
     printf("OPEN LOOP: DCO input = %d\n", dco_in);
     printf("OPEN LOOP: fll freq   = %d\n", fll_freq);
-
-  printf("FLL open loop mode working if you can read this and FLL frequency changed!\n");
 #endif // FLL_OPEN_LOOP_TEST
 
 
 #ifdef FLL_NORMAL_MODE_TEST
   printf("================ FLL NORMAL/LOCK MODE CHECK ================\n");
-
   fll_freq = fll_init(&fll);
-
   fll_freq_real = fll_get_freq(&fll);
-
   soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
-
   printf("NORMAL MODE: fll_freq request Hz = %d\n", fll_freq);
   printf("NORMAL MODE: fll_freq real Hz    = %d\n", fll_freq_real);
-
   // Set FLL to 150 MHz
   fll_freq = fll_set_freq(&fll, 150000000);
-
   fll_freq_real = fll_get_freq(&fll);
-
   soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
-
   printf("NORMAL MODE: fll_freq request Hz = %d\n", fll_freq);
   printf("NORMAL MODE: fll_freq real Hz    = %d\n", fll_freq_real);
-
-  printf("FLL normal mode working if you can read this and FLL frequency changed!\n");
-
 #endif // FLL_NORMAL_MODE_TEST
 
 
-  /*
-  * ==================================================================== 
-  * ============== Dyn changing of the frequency ======================= 
-  * ==================================================================== 
-  */
+#ifdef FLL_TWO_STEP_RCFG_TEST
+  printf("================ FLL TWO STEP RCFG TEST ================\n");
 
-#ifdef FLL_RCFG_TEST
-  printf("================ FLL NORMAL/LOCK MODE CHECK ================\n");
-
-  fll_freq = fll_init(&fll);
-
-  fll_freq_real = fll_get_freq(&fll);
-
-  soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
-
-  printf("NORMAL MODE: fll_freq request Hz = %d\n", fll_freq);
-  printf("NORMAL MODE: fll_freq real Hz    = %d\n", fll_freq_real);
-
-  // Set FLL to 80 MHz
-  fll_freq = fll_set_freq(&fll, 80*1000000);
-
-  fll_freq_real = fll_get_freq(&fll);
-
-  soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
-
-  printf("NORMAL MODE: fll_freq request Hz = %d\n", fll_freq);
-  printf("NORMAL MODE: fll_freq real Hz    = %d\n", fll_freq_real);
-
-  printf("FLL normal mode working if you can read this and FLL frequency changed!\n");
-
-  while(1)
-    {
-        // Change frequency
-        fll_set_freq(&fll, 150*1000000);
-        // fll_set_freq(&fll, 32768);
-        fll_freq_real = fll_get_freq(&fll);
-        soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
-        for(int i=0; i<1000; i++)
-            asm volatile("nop");
-        // printf("fll_freq real Hz    = %d\n", fll_freq_real);
-
-
-
-        
-        gpio_write(&gpio, 4, true);
-
-        // Change frequency
-        fll_set_freq(&fll, 0.1*1000000);
-        
-          // gpio_write(&gpio, 4, true);
-          // gpio_write(&gpio, 4, false);
-
-        fll_freq_real = fll_get_freq(&fll);
-        soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
-        // printf("fll_freq real Hz    = %d\n", fll_freq_real);
-
-        gpio_write(&gpio, 4, false);
-
-        for(int i=0; i<1000; i++)
-            asm volatile("nop");
-
-
-         
-    }
-
-#endif // FLL_RCFG_TEST
-
-#ifdef FLL_RCFG_TEST_WITH_OPEN_LOOP
-  printf("================ FLL NORMAL/LOCK MODE CHECK ================\n");
-// while(1);
-  // ========== power gating 
-
-  // Setup power_manager
-    mmio_region_t power_manager_reg = mmio_region_from_addr(POWER_MANAGER_START_ADDRESS);
-    power_manager.base_addr = power_manager_reg;
-    power_manager_counters_t power_manager_counters;
-    power_manager_counters_t power_manager_counters_cpu;
-
-  power_gate_counters_init(&power_manager_counters, 0, 0, 0, 0, 0, 0, 0, 0);
-  power_gate_counters_init(&power_manager_counters_cpu, 40, 40, 30, 30, 20, 20, 0, 0);
-  // Power-gate periph
-  power_gate_periph(&power_manager, kOff_e, &power_manager_counters);
-  power_gate_ram_block(&power_manager, 2, kOff_e, &power_manager_counters);
-  power_gate_ram_block(&power_manager, 3, kOff_e, &power_manager_counters);
-  power_gate_ram_block(&power_manager, 4, kOff_e, &power_manager_counters);
-  power_gate_ram_block(&power_manager, 5, kOff_e, &power_manager_counters);
-  power_gate_ram_block(&power_manager, 6, kOff_e, &power_manager_counters);
-  power_gate_ram_block(&power_manager, 7, kOff_e, &power_manager_counters);
-  // Power-gate CGRA logic
-  power_gate_external(&power_manager, 0, kOff_e, &power_manager_counters);
-  // Power-gate CGRA memories
- power_gate_external(&power_manager, 1, kOff_e, &power_manager_counters);
-  // Power-gate Coubertin
-   power_gate_external(&power_manager, 2, kOff_e, &power_manager_counters) ;
-
-// while(1);
-
-
-  // fll_freq = fll_init(&fll);
-
-  // fll_freq_real = fll_get_freq(&fll);
-
-  // soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
-
-  // printf("NORMAL MODE: fll_freq request Hz = %d\n", fll_freq);
-  // printf("NORMAL MODE: fll_freq real Hz    = %d\n", fll_freq_real);
-
-  // // Set FLL to 80 MHz
-  // fll_freq = fll_set_freq(&fll, 80*1000000);
-
-  // fll_freq_real = fll_get_freq(&fll);
-
-  // soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
-
-  // printf("NORMAL MODE: fll_freq request Hz = %d\n", fll_freq);
-  // printf("NORMAL MODE uhum: fll_freq real Hz    = %d\n", fll_freq_real);
-
-  // printf("FLL normal mode working if you can read this and FLL frequency changed!\n");
-
-    // uint32_t dco_inp = 170;
-   uint32_t dco_inp = 180;
+  uint32_t dco_inp = 180;
   const uint32_t config3 = fll_create_config_1((fll_conf1_reg_t){
       .mult_factor = fll_conf1.mult_factor,
       .dco_input   = dco_inp,
@@ -347,7 +203,7 @@ int main(void) {
       .op_mode     = fll_conf1.op_mode
     });
 
-      dco_inp = 807;
+  dco_inp = 807;
   const uint32_t config4 = fll_create_config_1((fll_conf1_reg_t){
       .mult_factor = fll_conf1.mult_factor,
       .dco_input   = dco_inp,
@@ -356,88 +212,34 @@ int main(void) {
       .op_mode     = fll_conf1.op_mode
     });
 
+  while(1){
+    // Change frequency (open loop)
+    fll_conf1_set(&fll, config3);
+    fll_freq = fll_get_freq(&fll);
+    soc_ctrl_set_frequency(&soc_ctrl, fll_freq);
+
+    for(int i=0; i<1000; i++)
+      asm volatile("nop");
+
     // gpio_write(&gpio, 4, true);
-  // while(1);
 
-  while(1)
-    {
-        // Change frequency (open loop)
-      gpio_write(&gpio, 4, true);
-        fll_conf1_set(&fll, config3);
-        // gpio_write(&gpio, 4, false);
-        // gpio_write(&gpio, 4, true);
-        fll_freq = fll_get_freq(&fll);
-        // gpio_write(&gpio, 4, true);
-        // gpio_write(&gpio, 4, false);
-        soc_ctrl_set_frequency(&soc_ctrl, fll_freq);
-        gpio_write(&gpio, 4, false);
+    // open loop stage
+    fll_conf1_set(&fll, config4);
+    // feedback stage
+    fll_set_freq(&fll, 150*1000000);
+    fll_freq_real = fll_get_freq(&fll);
+    soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
 
+    // gpio_write(&gpio, 4, false);
 
+    for(int i=0; i<1000; i++)
+        asm volatile("nop");
 
-        // normal mode
-        // fll_set_freq(&fll, 0.1*1000000);
-        // fll_freq_real = fll_get_freq(&fll);
-        // soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
-
-        // gpio_write(&gpio, 4, false);
-
-        for(int i=0; i<1000; i++)
-            asm volatile("nop");
-
-        
-        
-        // Change frequency
-        // fll_set_freq(&fll, 0.1*1000000);
-        // fll_freq_real = fll_get_freq(&fll);
-        // soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
-
-          
-
-          // while(1);
-        // gpio_write(&gpio, 4, true);
-        // Change frequency 
-        // open loop stage
-        fll_conf1_set(&fll, config4);
-        // gpio_write(&gpio, 4, false);
-        // gpio_write(&gpio, 4, true);
-        // feedback stage
-        fll_set_freq(&fll, 150*1000000);
-        // gpio_write(&gpio, 4, false);
-         // gpio_write(&gpio, 4, true);
-        fll_freq_real = fll_get_freq(&fll);
-        // gpio_write(&gpio, 4, false);
-        // gpio_write(&gpio, 4, true);
-        soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
-        // gpio_write(&gpio, 4, false);
-
-
-        // gpio_write(&gpio, 4, false);
-
-
-        for(int i=0; i<1000; i++)
-            asm volatile("nop");
-
-        // while(1);
-        printf("Freq    = %d\n", fll_freq_real);
-
-
+    printf("Freq    = %d\n", fll_freq_real);
          
-    }
 
-#endif // FLL_RCFG_TEST_WITH_OPEN_LOOP
+#endif // FLL_TWO_STEP_RCFG_TEST
 
-
-
-  // what I want is two modes
-  /* 
-  Measurement for transition from freq a to freq b.
-  In my case, it is 150 MHz to 32 KHz.
-  However, I can measure others.
-  */
-
-  // do the pre configurations
-
-  // set the freq to 150 MHz and then to 32 KHz
 
   return EXIT_SUCCESS;
 }

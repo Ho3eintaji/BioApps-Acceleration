@@ -21,7 +21,7 @@
 
 #define PIN_TRIGGER     4  //used for trigering and checking on oscilloscope
 
-// #define PUT_SLEEP
+#define PUT_SLEEP
 #define PUT_DEEP_SLEEP
 // #define PUT_IDLE
 
