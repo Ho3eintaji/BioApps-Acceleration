@@ -15,7 +15,14 @@
 #include "cgra.h"
 #include "cgra_bitstream.h"
 
+#include "soc_ctrl.h"
+#include "rv_timer.h"
+#include "fll.h"
+
 #define CGRA_PE_UTILIZATION 100
+
+
+#define DEBUG
 
 // Use PRINTF instead of PRINTF to remove print by default
 #ifdef DEBUG
@@ -26,6 +33,12 @@
 
 #define INPUT_LENGTH 4
 #define OUTPUT_LENGTH 5
+
+const uint64_t SYS_FREQ = 100*1000000; //MHz
+uint32_t fll_freq, fll_freq_real;
+fll_t fll;
+soc_ctrl_t soc_ctrl;
+uint32_t fll_status;
 
 // one dim slot x n input values (data ptrs, constants, ...)
 int32_t cgra_input[CGRA_N_COLS][CGRA_N_SLOTS][10] __attribute__ ((aligned (4)));
@@ -57,9 +70,31 @@ void handler_irq_external(void) {
 
 int main(void) {
 
-  PRINTF("Init CGRA context memory...\n");
+  //fll
+      /*
+     * FLL and SoC controller 
+     */ 
+    // 2.1 FLL peripheral structure to access the registers
+    fll.base_addr = mmio_region_from_addr((uintptr_t)FLL_START_ADDRESS);
+    fll_init(&fll);
+    fll_status = fll_status_get(&fll);
+    soc_ctrl.base_addr = mmio_region_from_addr((uintptr_t)SOC_CTRL_START_ADDRESS);
+
+
+    //2.4 Set default app frequency
+    fll_set_freq(&fll, SYS_FREQ);
+    for (int j = 0; j < 10000; j++) {
+      asm volatile("nop");
+    }
+    fll_freq_real = fll_get_freq(&fll);
+    soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
+
+
+    while(1);
+
+  PRINTF("Init CGRA context memory...\r\n");
   cgra_cmem_init(cgra_imem_bitstream, cgra_kmem_bitstream);
-  PRINTF("\rdone\n");
+  PRINTF("done\n");
 
     // Init the PLIC
   rv_plic_params.base_addr = mmio_region_from_addr((uintptr_t)PLIC_START_ADDRESS);
