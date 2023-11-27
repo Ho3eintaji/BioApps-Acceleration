@@ -14,7 +14,9 @@
 #include "soc_ctrl.h"
 #include "heepocrates.h"
 
-#define VCD_TRIGGER_GPIO 0
+#define VCD_TRIGGER_GPIO 4
+
+uint64_t CLK_FREQ2 = 250*1000000;
 
 static gpio_t gpio;
 int32_t m_c[DIM*DIM];
@@ -29,7 +31,7 @@ int main(int argc, char *argv[])
 {
     uint32_t errors = 0;
 
-#if CLK_FREQ != 100000000
+// #if CLK_FREQ != 100000000
     uint32_t fll_freq, fll_freq_real;
 
     fll_t fll;
@@ -38,19 +40,20 @@ int main(int argc, char *argv[])
     soc_ctrl_t soc_ctrl;
     soc_ctrl.base_addr = mmio_region_from_addr((uintptr_t)SOC_CTRL_START_ADDRESS);
 
-    fll_freq = fll_set_freq(&fll, CLK_FREQ);
+    fll_freq = fll_set_freq(&fll, CLK_FREQ2);
     fll_freq_real = fll_get_freq(&fll);
     soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
-#endif
+// #endif
 
     dump_on();
     matrixMul(m_a, m_b, m_c, DIM);
     dump_off();
 
     errors = check_results(m_c, DIM);
-
+    
     if (errors == 0) {
         printf("Success.\n");
+        dump_off();
         return EXIT_SUCCESS;
     } else {
         printf("Failure: %d errors.\n", errors);
