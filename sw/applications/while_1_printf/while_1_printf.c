@@ -18,15 +18,44 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "core_v_mini_mcu.h"
+#include "power_manager.h"
+#include "gpio.h"
+#include "soc_ctrl.h"
+#include "rv_timer.h"
+#include "fll.h"
+#include "gpio.h"
+#include "power_manager.h"
+#include "csr.h"
+#include "hart.h"
+#include "handler.h"
+
+uint32_t fll_freq, fll_freq_real;
+fll_t fll;
+soc_ctrl_t soc_ctrl;
+uint32_t fll_status;
+const uint64_t SYS_FREQ = 1*1000000; //MHz
+
+
 
 int main(int argc, char *argv[])
 {
+
+    // Set app frequency
+    fll_set_freq(&fll, SYS_FREQ);
+    for (int j = 0; j < 10000; j++) {
+      asm volatile("nop");
+    }
+    fll_freq_real = fll_get_freq(&fll);
+    soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
+
+
     /* write something to stdout */
 
     int i = 0, k;
     while(1){
 
-        printf("hello %x!\n", i);
+        printf("hello! %x!\n", i);
         i++;
         for(k = 0; k < 50000; k++) asm volatile("nop");
     }
