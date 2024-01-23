@@ -24,11 +24,11 @@
 #include "soc_ctrl.h"
 #include "rv_timer.h"
 #include "fll.h"
-#include "gpio.h"
-#include "power_manager.h"
 #include "csr.h"
 #include "hart.h"
 #include "handler.h"
+#include "heepocrates.h"
+
 
 uint32_t fll_freq, fll_freq_real;
 fll_t fll;
@@ -37,11 +37,22 @@ uint32_t fll_status;
 const uint64_t SYS_FREQ = 1*1000000; //MHz
 
 
-
 int main(int argc, char *argv[])
 {
 
     // Set app frequency
+
+    /*
+     * FLL and SoC controller 
+     */ 
+    // 2.1 FLL peripheral structure to access the registers
+    fll.base_addr = mmio_region_from_addr((uintptr_t)FLL_START_ADDRESS);
+    fll_init(&fll);
+    fll_status = fll_status_get(&fll);
+    soc_ctrl.base_addr = mmio_region_from_addr((uintptr_t)SOC_CTRL_START_ADDRESS);
+
+
+    //2.4 Set default app frequency
     fll_set_freq(&fll, SYS_FREQ);
     for (int j = 0; j < 10000; j++) {
       asm volatile("nop");
@@ -50,12 +61,14 @@ int main(int argc, char *argv[])
     soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
 
 
+
+
     /* write something to stdout */
 
     int i = 0, k;
     while(1){
 
-        printf("hello! %x!\n", i);
+        printf("hello!! %x!\n", i);
         i++;
         for(k = 0; k < 50000; k++) asm volatile("nop");
     }
