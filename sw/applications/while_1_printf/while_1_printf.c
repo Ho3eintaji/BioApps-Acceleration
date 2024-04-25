@@ -32,7 +32,6 @@
 
 
 const uint64_t SYS_FREQ = 150*1000000; //MHz
-
 void fll_cfg(uint64_t freq);
 
 
