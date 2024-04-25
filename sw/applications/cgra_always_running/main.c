@@ -20,6 +20,7 @@
 #include "fll.h"
 
 #define CGRA_PE_UTILIZATION 100
+const uint64_t SYS_FREQ = 60*1000000; //MHz
 
 
 #define DEBUG
@@ -34,7 +35,7 @@
 #define INPUT_LENGTH 4
 #define OUTPUT_LENGTH 5
 
-const uint64_t SYS_FREQ = 100*1000000; //MHz
+
 uint32_t fll_freq, fll_freq_real;
 fll_t fll;
 soc_ctrl_t soc_ctrl;
@@ -89,8 +90,6 @@ int main(void) {
     fll_freq_real = fll_get_freq(&fll);
     soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
 
-
-    while(1);
 
   PRINTF("Init CGRA context memory...\r\n");
   cgra_cmem_init(cgra_imem_bitstream, cgra_kmem_bitstream);
