@@ -13,6 +13,10 @@
 #include "cgra_bitstream.h"
 #include "stimuli.h"
 
+#include "soc_ctrl.h"
+#include "rv_timer.h"
+#include "fll.h"
+
 // Use PRINTF instead of PRINTF to remove print by default
 #ifdef DEBUG
   #define PRINTF(fmt, ...)    PRINTF(fmt, ## __VA_ARGS__)
@@ -21,6 +25,13 @@
 #endif
 
 #define OUTPUT_LENGTH 4
+
+// System frequency
+const uint64_t SYS_FREQ = 300*1000000; //MHz
+uint32_t fll_freq, fll_freq_real;
+fll_t fll;
+soc_ctrl_t soc_ctrl;
+uint32_t fll_status;
 
 // one dim slot x n input values (data ptrs, constants, ...)
 int32_t cgra_input[CGRA_N_SLOTS][10] __attribute__ ((aligned (4)));
@@ -43,6 +54,17 @@ void handler_irq_external(void) {
 }
 
 int main(void) {
+
+    //Set frequency
+    fll.base_addr = mmio_region_from_addr((uintptr_t)FLL_START_ADDRESS);
+    fll_init(&fll);
+    fll_status = fll_status_get(&fll);
+    soc_ctrl.base_addr = mmio_region_from_addr((uintptr_t)SOC_CTRL_START_ADDRESS);
+    fll_set_freq(&fll, SYS_FREQ);
+    for (int j = 0; j < 10000; j++)
+      asm volatile("nop");
+    fll_freq_real = fll_get_freq(&fll);
+    soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
 
   PRINTF("Init CGRA context memory...\n");
   cgra_cmem_init(cgra_imem_bistream, cgra_kmem_bitstream);
