@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "cgra.h": "c"
+        "cgra.h": "c",
+        "core_v_mini_mcu.h": "c",
+        "handler.h": "c"
     }
 }
