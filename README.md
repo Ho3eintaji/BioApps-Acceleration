@@ -31,6 +31,18 @@ Don't forget to activate the conda enviroment
 conda activate core-v-mini-mcu
 ```
 
+## Running transformer application
+
+0. first run below command for creating required heepocrates librares
+```
+make heepocrates-gen
+```
+
+1. then run the application
+```
+./run.sh seiz_trans
+```
+
 ## Compiling Software
 
 Don't forget to set the `RISCV` env variable to the compiler folder (without the `/bin` included).

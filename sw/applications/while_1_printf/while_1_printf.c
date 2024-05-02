@@ -31,7 +31,7 @@
 
 
 
-const uint64_t SYS_FREQ = 34.5*1000000; //MHz
+const uint64_t SYS_FREQ = 150*1000000; //MHz
 void fll_cfg(uint64_t freq);
 
 
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
   int i = 0, k;
   while(1){
 
-      printf("hello!! %x!\n", i);
+      printf("hello 1s %x!\n", i);
       i++;
       for(k = 0; k < 50000; k++) asm volatile("nop");
   }
