@@ -3,6 +3,12 @@
         "cgra.h": "c",
         "core_v_mini_mcu.h": "c",
         "handler.h": "c",
-        "multiply_cgra.h": "c"
+        "multiply_cgra.h": "c",
+        "fpmath.h": "c",
+        "intrinsics.h": "c",
+        "config.h": "c",
+        "array_output.h": "c",
+        "main.h": "c",
+        "stddef.h": "c"
     }
 }

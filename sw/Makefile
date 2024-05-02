@@ -107,23 +107,72 @@ INC_FOLDERS_GCC            = $(addprefix -I ,$(INC_FOLDERS))
 # 		-L $(RISCV)/riscv32-unknown-elf/lib \
 # 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
-applications/seiz_trans/seiz_trans.flash_load.elf: applications/seiz_trans/main.c $(wildcard applications/seiz_trans/*.c) $(wildcard applications/seiz_trans/data_cpp/*.c) $(wildcard applications/seiz_trans/SYLT-FFT/*.c)
+# $(wildcard applications/seiz_trans/*.c) $(wildcard applications/seiz_trans/data_cpp/*.c) $(wildcard applications/seiz_trans/SYLT-FFT/*.c)
+
+# applications/seiz_trans/seiz_trans.flash_load.elf: applications/seiz_trans/main.c 
+# 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+# 		$(CUSTOM_GCC_FLAGS) \
+# 		-DHOST_BUILD \
+# 		-DEXTERNAL_CRTO \
+# 		-T x_heep_linker/link_flash_load.ld \
+# 		-I $(RISCV)/riscv32-unknown-elf/include \
+# 		-I applications/seiz_trans/ \
+# 		-I applications/seiz_trans/data_cpp/ \
+# 		-I applications/seiz_trans/SYLT-FFT/ \
+# 		$(INC_FOLDERS_GCC) \
+# 		-static \
+# 		$(LIB_CRT_FLASH_LOAD) \
+# 		applications/seiz_trans/main.c \
+# 		$(wildcard applications/seiz_trans/*.c) \
+# 		$(wildcard applications/seiz_trans/data_cpp/*.c) \
+# 		$(wildcard applications/seiz_trans/SYLT-FFT/*.c) \
+# 		$(LIB_RUNTIME) \
+# 		$(LIB_BASE) \
+# 		$(LIB_DRIVERS) \
+# 		-Wl,-Map=applications/seiz_trans/seiz_trans.spihost.map \
+# 		-L $(RISCV)/riscv32-unknown-elf/lib \
+# 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+applications/seiz_trans2/seiz_trans2.flash_load.elf: applications/seiz_trans2/main.c
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
 		$(CUSTOM_GCC_FLAGS) \
 		-DHOST_BUILD \
 		-DEXTERNAL_CRTO \
 		-T x_heep_linker/link_flash_load.ld \
 		-I $(RISCV)/riscv32-unknown-elf/include \
-		-I applications/seiz_trans/ \
-		-I applications/seiz_trans/data_cpp/ \
-		-I applications/seiz_trans/SYLT-FFT/ \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT_FLASH_LOAD) \
+		$^ $(LIB_RUNTIME) \
+		$ applications/seiz_trans2/performance.c \
+		$ applications/seiz_trans2/multiply_cgra.c \
+		$ applications/seiz_trans2/weightsAndBiasesC.c \
+		$ applications/seiz_trans2/transformerBlockC.c \
+		$ applications/seiz_trans2/addNormC.c \
+		$ applications/seiz_trans2/dense_layerC.c \
+		$ applications/seiz_trans2/tokenPosEmbeddingC.c \
+		$ applications/seiz_trans2/selfattentionC.c \
+		$ applications/seiz_trans2/transposeC.c \
+		$ applications/seiz_trans2/matMulC.c \
+		$ applications/seiz_trans2/softmaxC.c \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-Wl,-Map=applications/seiz_trans2/seiz_trans2.spihost.map \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+applications/seiz_trans/seiz_trans.flash_load.elf: applications/seiz_trans/main.c 
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link_flash_load.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
 		$(INC_FOLDERS_GCC) \
 		-static \
 		$(LIB_CRT_FLASH_LOAD) \
 		applications/seiz_trans/main.c \
 		$(wildcard applications/seiz_trans/*.c) \
-		$(wildcard applications/seiz_trans/data_cpp/*.c) \
-		$(wildcard applications/seiz_trans/SYLT-FFT/*.c) \
 		$(LIB_RUNTIME) \
 		$(LIB_BASE) \
 		$(LIB_DRIVERS) \
