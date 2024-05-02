@@ -2,6 +2,7 @@
     "files.associations": {
         "cgra.h": "c",
         "core_v_mini_mcu.h": "c",
-        "handler.h": "c"
+        "handler.h": "c",
+        "multiply_cgra.h": "c"
     }
 }

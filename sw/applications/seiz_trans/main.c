@@ -18,6 +18,16 @@
 //#include "stftVec.h"
 #include "data_cpp/array_output.h"
 
+// #include "csr.h"
+// #include "hart.h"
+// #include "handler.h"
+// #include "core_v_mini_mcu.h"
+// #include "rv_plic.h"
+// #include "rv_plic_regs.h"
+// #include "heepocrates.h"
+// #include "heepocrates_ctrl.h"
+// #include "cgra.h"
+
 
 float error_check(const quant_bit_width* groundTruth, const quant_bit_width* output, size_t length){
     long error = 0;
@@ -106,37 +116,37 @@ void stft_rearrange(quant_bit_width* rawInputSignal, quant_bit_width* stftVec, s
 
 int main() {
     //CGRA
-    kcom_perf_t kperf;
-    timerInit(); // Init timer
-    initCGRA(); // Initialize the CGRA
-    countersInit(); // Enable and reset the CGRA performance counters
+    // kcom_perf_t kperf;
+    // timerInit(); // Init timer
+    // initCGRA(); // Initialize the CGRA
+    // countersInit(); // Enable and reset the CGRA performance counters
 
-    // Transformer   
-    // Every buffer is 16x16 = 256
-    quant_bit_width* input = STFT_rand_out; // 1st
-    quant_bit_width* output = STFT_rand_out + 4800; // Last
+    // // Transformer   
+    // // Every buffer is 16x16 = 256
+    // quant_bit_width* input = STFT_rand_out; // 1st
+    // quant_bit_width* output = STFT_rand_out + 4800; // Last
 
-    quant_bit_width* input_normalized = input + 256; // 2nd
-    quant_bit_width* qkv = input_normalized + 256; 
-    quant_bit_width* intermediate = qkv + 256*4; // 4 = K, V, Q and Kt
-    quant_bit_width* aux_padding = intermediate + 256;
+    // quant_bit_width* input_normalized = input + 256; // 2nd
+    // quant_bit_width* qkv = input_normalized + 256; 
+    // quant_bit_width* intermediate = qkv + 256*4; // 4 = K, V, Q and Kt
+    // quant_bit_width* aux_padding = intermediate + 256;
     
-    int32_t distances[2];
-    //stft_rearrange(rawInputSignal, stftVec, 80, 5);
+    // int32_t distances[2];
+    // //stft_rearrange(rawInputSignal, stftVec, 80, 5);
         
-    kcom_perfRecordStart(&(kperf.time.infer));
-    transformerInference(input, output, input_normalized, qkv, intermediate, aux_padding, (void *) &kperf);
-    kcom_perfRecordStop(&(kperf.time.infer));
+    // kcom_perfRecordStart(&(kperf.time.infer));
+    // transformerInference(input, output, input_normalized, qkv, intermediate, aux_padding, (void *) &kperf);
+    // kcom_perfRecordStop(&(kperf.time.infer));
 
-    printf("\rCycles: %d\n", kperf.time.infer.spent_cy);
+    // printf("\rCycles: %d\n", kperf.time.infer.spent_cy);
     
-    prototype_distances(prototypes, output, distances, D_MODEL, 2);
+    // prototype_distances(prototypes, output, distances, D_MODEL, 2);
     
-    printf("\rDistances:\n");
-    for (int i = 0; i< 2; i++)
-        printf("Class %d = %d\n", i, distances[i]);
+    // printf("\rDistances:\n");
+    // for (int i = 0; i< 2; i++)
+    //     printf("Class %d = %d\n", i, distances[i]);
     
-    //printf("\rEND\n");
+    printf("\rEND\n");
     return 0;
 }
 

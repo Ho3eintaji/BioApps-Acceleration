@@ -51,6 +51,9 @@
 #include "hart.h"
 #include "cgra.h"
 
+#include "heepocrates.h"
+#include "heepocrates_ctrl.h"
+
 
 /****************************************************************************/
 /**                                                                        **/
@@ -142,7 +145,7 @@ void initCGRA(){
   // Init the PLIC
   plic_Init();
   plic_irq_set_priority(CGRA_INTR, 1);
-  plic_irq_set_enabled(CGRA_INTR, kPlicToggleEnabled);
+  plic_irq_set_enabled(CGRA_INTR, kDifPlicToggleEnabled);
   plic_assign_external_irq_handler( CGRA_INTR, (void *) &handler_irq_cgra);
 
   // Enable interrupt on processor side

@@ -80,6 +80,33 @@ INC_FOLDERS_GCC            = $(addprefix -I ,$(INC_FOLDERS))
 # This is an example for running a Hello World in the testbench
 # We link with our custom crt0.s and syscalls.c against newlib so that we can
 # use the c standard library
+
+# applications/seiz_trans/seiz_trans.flash_load.elf: applications/seiz_trans/main.c $(wildcard applications/seiz_trans/*.c) $(wildcard applications/seiz_trans/data_cpp/*.c) $(wildcard applications/seiz_trans/kernels_common/*.c) $(wildcard applications/seiz_trans/SYLT-FFT/*.c)
+# 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+# 		$(CUSTOM_GCC_FLAGS) \
+# 		-DHOST_BUILD \
+# 		-DEXTERNAL_CRTO \
+# 		-T x_heep_linker/link_flash_load.ld \
+# 		-I $(RISCV)/riscv32-unknown-elf/include \
+# 		-I applications/seiz_trans/ \
+# 		-I applications/seiz_trans/data_cpp/ \
+# 		-I applications/seiz_trans/kernels_common/ \
+# 		-I applications/seiz_trans/SYLT-FFT/ \
+# 		$(INC_FOLDERS_GCC) \
+# 		-static \
+# 		$(LIB_CRT_FLASH_LOAD) \
+# 		applications/seiz_trans/main.c \
+# 		$(wildcard applications/seiz_trans/*.c) \
+# 		$(wildcard applications/seiz_trans/data_cpp/*.c) \
+# 		$(wildcard applications/seiz_trans/kernels_common/*.c) \
+# 		$(wildcard applications/seiz_trans/SYLT-FFT/*.c) \
+# 		$(LIB_RUNTIME) \
+# 		$(LIB_BASE) \
+# 		$(LIB_DRIVERS) \
+# 		-Wl,-Map=applications/seiz_trans/seiz_trans.spihost.map \
+# 		-L $(RISCV)/riscv32-unknown-elf/lib \
+# 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
 applications/seiz_trans/seiz_trans.flash_load.elf: applications/seiz_trans/main.c $(wildcard applications/seiz_trans/*.c) $(wildcard applications/seiz_trans/data_cpp/*.c) $(wildcard applications/seiz_trans/SYLT-FFT/*.c)
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
 		$(CUSTOM_GCC_FLAGS) \
@@ -103,25 +130,6 @@ applications/seiz_trans/seiz_trans.flash_load.elf: applications/seiz_trans/main.
 		-Wl,-Map=applications/seiz_trans/seiz_trans.spihost.map \
 		-L $(RISCV)/riscv32-unknown-elf/lib \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
-
-# applications/cgra_test/ws.flash_load.elf: applications/cgra_test/ws.c 
-# 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
-# 		$(CUSTOM_GCC_FLAGS) \
-# 		-DHOST_BUILD \
-# 		-DEXTERNAL_CRTO \
-# 		-T x_heep_linker/link_flash_load.ld \
-# 		-I $(RISCV)/riscv32-unknown-elf/include \
-# 		$(INC_FOLDERS_GCC) \
-# 		-static \
-# 		$(LIB_CRT_FLASH_LOAD) \
-# 		$^ $(LIB_RUNTIME) \
-# 		applications/cgra_test/kernels_common/kernels_common.c \
-#         applications/cgra_test/kernels/conv-oc/conv.c \
-# 		$(LIB_BASE) \
-# 		$(LIB_DRIVERS) \
-# 		-Wl,-Map=applications/cgra_test/ws.spihost.map \
-# 		-L $(RISCV)/riscv32-unknown-elf/lib \
-# 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
 x_applications/hello_world/hello_world.elf: x_applications/hello_world/hello_world.c
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
