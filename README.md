@@ -31,6 +31,17 @@ Don't forget to activate the conda enviroment
 conda activate core-v-mini-mcu
 ```
 
+## HEEPocrates testing board
+- A clock input with the frequency of 32.768 KHz should be given to the testing board.
+    - Frequency: 32.768 KHz
+    - Amp: 1.8 V
+    - Offset: 900 mV
+    - Func: square
+- For running the application, we are using flash load mode (more info on HEEPocrates main repo), so be carefull below configuration is set on the board:
+    - BOOT SEL: H
+    - EXEC FLASH: L
+    - BYPASS: L
+
 ## Running transformer application
 
 0. first run below command for creating required heepocrates librares
@@ -38,47 +49,10 @@ conda activate core-v-mini-mcu
 make heepocrates-gen
 ```
 
-1. then run the application
+1. then run the application (`hello_world` or `seiz_trans`)
+
 ```
 ./run.sh seiz_trans
 ```
 
-## Compiling Software
-
-Don't forget to set the `RISCV` env variable to the compiler folder (without the `/bin` included).
-
-Then go to the `./sw` folder and type:
-
-For jtag booting (loading memory from jtag):
-
-```
-make x_applications/hello_world/hello_world.hex
-```
-
-For executing from flash:
-```
-make x_applications/hello_world/hello_world.flash_exec.hex
-```
-
-For loading from flash to memory:
-```
-make x_applications/hello_world/hello_world.flash_load.hex
-```
-
-This will create the executable file to be loaded in your target system (ASIC, FPGA, Simulation).
-
-### Bypassing the FLL
-
-If you want to bypass the FLL, compile as:
-
-```
-make x_applications/hello_world/hello_world.hex TARGET=bypass_fll
-```
-
-or if you are using the Testing Board, do
-
-```
-make x_applications/hello_world/hello_world.hex TARGET=testing_board_bypass_fll
-```
-
-this assume your input Clock is `50MHz`.
+- `/dev/ttyUSB2` is considered as default serial port. 

@@ -71,8 +71,9 @@
 /****************************************************************************/
 
 
-// Handler for the CGRA interruption
-void handler_irq_cgra(uint32_t id);
+// // Handler for the CGRA interruption
+// void handler_irq_cgra(uint32_t id);
+
 
 
 /****************************************************************************/
@@ -90,6 +91,26 @@ static uint8_t              cgra_slot;
 
 // CGRA input and output buffers
 static int32_t cgra_input[CGRA_N_COLS][CGRA_COL_INPUT_SIZE]    __attribute__ ((aligned (4)));
+
+
+// Interrupt controller variables
+dif_plic_params_t rv_plic_params;
+dif_plic_t rv_plic;
+dif_plic_result_t plic_res;
+dif_plic_irq_id_t intr_num;
+
+/*----------------------------------------------------------------------------
+                        INTERRUPTS
+-----------------------------------------------------------------------------*/
+
+void handler_irq_external(void) {
+    // Claim/clear interrupt
+    plic_res = dif_plic_irq_claim(&rv_plic, 0, &intr_num);
+    if (plic_res == kDifPlicOk && intr_num == CGRA_INTR) {
+      cgra_intr_flag = 1;
+    }
+    dif_plic_irq_complete(&rv_plic, 0, &intr_num);
+}
 
 
 /****************************************************************************/
@@ -143,10 +164,32 @@ void multiply_cgra(int * matrixA, int ROWS_A, int COLS_A, int * matrixB, int COL
 // Initialize the CGRA
 void initCGRA(){
   // Init the PLIC
-  plic_Init();
-  plic_irq_set_priority(CGRA_INTR, 1);
-  plic_irq_set_enabled(CGRA_INTR, kDifPlicToggleEnabled);
-  plic_assign_external_irq_handler( CGRA_INTR, (void *) &handler_irq_cgra);
+  // plic_Init();
+  // plic_irq_set_priority(CGRA_INTR, 1);
+  // plic_irq_set_enabled(CGRA_INTR, kDifPlicToggleEnabled);
+  // plic_assign_external_irq_handler( CGRA_INTR, (void *) &handler_irq_cgra);
+ // Init the PLIC
+  rv_plic_params.base_addr = mmio_region_from_addr((uintptr_t)PLIC_START_ADDRESS);
+  plic_res = dif_plic_init(rv_plic_params, &rv_plic);
+
+  if (plic_res != kDifPlicOk) {
+    printf("PLIC init failed\n;");
+    return EXIT_FAILURE;
+  }
+
+  // Set CGRA priority to 1 (target threshold is by default 0) to trigger an interrupt to the target (the processor)
+  plic_res = dif_plic_irq_set_priority(&rv_plic, CGRA_INTR, 1);
+  if (plic_res != kDifPlicOk) {
+    printf("Set CGRA interrupt priority to 1 failed\n;");
+    return EXIT_FAILURE;
+  }
+
+  plic_res = dif_plic_irq_set_enabled(&rv_plic, CGRA_INTR, 0, kDifPlicToggleEnabled);
+  if (plic_res != kDifPlicOk) {
+    printf("Enable CGRA interrupt failed\n;");
+    return EXIT_FAILURE;
+  }
+
 
   // Enable interrupt on processor side
   // Enable global interrupt for machine-level interrupts
@@ -164,10 +207,10 @@ void initCGRA(){
   cgra_slot = cgra_get_slot(&cgra);
 }
 
-// Interrupt controller variables
-void handler_irq_cgra(uint32_t id) {
-  cgra_intr_flag = 1;
-}
+// // Interrupt controller variables
+// void handler_irq_cgra(uint32_t id) {
+//   cgra_intr_flag = 1;
+// }
 
 void countersInit(){
   // Enable and reset the CGRA performance counters
