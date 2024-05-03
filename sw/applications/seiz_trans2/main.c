@@ -48,16 +48,6 @@ void gpio_output_cfg(gpio_t *gpio, uint32_t pin);
 gpio_t gpio;
 
 
-// #include "csr.h"
-// #include "hart.h"
-// #include "handler.h"
-// #include "core_v_mini_mcu.h"
-// #include "rv_plic.h"
-// #include "rv_plic_regs.h"
-// #include "heepocrates.h"
-// #include "heepocrates_ctrl.h"
-// #include "cgra.h"
-
 
 float error_check(const quant_bit_width* groundTruth, const quant_bit_width* output, size_t length){
     long error = 0;
@@ -169,15 +159,13 @@ int main() {
     //stft_rearrange(rawInputSignal, stftVec, 80, 5);
         
     kcom_perfRecordStart(&(kperf.time.infer));
-
-    while(1){
-        gpio_write(&gpio, PIN_TRIGGER, true);
+    // while(1){
+    //     gpio_write(&gpio, PIN_TRIGGER, true);
         transformerInference(input, output, input_normalized, qkv, intermediate, aux_padding, (void *) &kperf);
-        gpio_write(&gpio, PIN_TRIGGER, false);
-        // I want to add a delay
-        for (int i = 0; i < 1000000; i++) {asm("nop");}
-
-    }
+    //     gpio_write(&gpio, PIN_TRIGGER, false);
+    //     //a delay
+    //     for (int i = 0; i < 1000000; i++) {asm("nop");}
+    // }
     kcom_perfRecordStop(&(kperf.time.infer));
 
     printf("\rCycles: %d\n", kperf.time.infer.spent_cy);
