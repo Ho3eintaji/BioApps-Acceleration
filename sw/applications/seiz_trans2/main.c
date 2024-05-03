@@ -40,7 +40,7 @@
 #include "gpio.h"
 
 // System frequency
-const uint64_t SYS_FREQ = 100*1000000; //MHz
+const uint64_t SYS_FREQ = 150*1000000; //MHz
 void fll_cfg(uint64_t freq);
 // Gpio
 #define PIN_TRIGGER     4  //used for trigering and checking on oscilloscope
@@ -159,13 +159,13 @@ int main() {
     //stft_rearrange(rawInputSignal, stftVec, 80, 5);
         
     kcom_perfRecordStart(&(kperf.time.infer));
-    // while(1){
-    //     gpio_write(&gpio, PIN_TRIGGER, true);
+    while(1){
+        gpio_write(&gpio, PIN_TRIGGER, true);
         transformerInference(input, output, input_normalized, qkv, intermediate, aux_padding, (void *) &kperf);
-    //     gpio_write(&gpio, PIN_TRIGGER, false);
-    //     //a delay
-    //     for (int i = 0; i < 1000000; i++) {asm("nop");}
-    // }
+        gpio_write(&gpio, PIN_TRIGGER, false);
+        //a delay
+        for (int i = 0; i < 1000000; i++) {asm("nop");}
+    }
     kcom_perfRecordStop(&(kperf.time.infer));
 
     printf("\rCycles: %d\n", kperf.time.infer.spent_cy);
