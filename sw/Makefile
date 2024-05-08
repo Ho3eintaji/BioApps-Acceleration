@@ -108,6 +108,35 @@ applications/seiz_trans/seiz_trans.flash_load.elf: applications/seiz_trans/main.
 		-L $(RISCV)/riscv32-unknown-elf/lib \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
+# adding for seiz_trans_wo_cgra
+applications/seiz_trans_wo_cgra/seiz_trans_wo_cgra.flash_load.elf: applications/seiz_trans_wo_cgra/main.c
+	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
+		$(CUSTOM_GCC_FLAGS) \
+		-DHOST_BUILD \
+		-DEXTERNAL_CRTO \
+		-T x_heep_linker/link_flash_load.ld \
+		-I $(RISCV)/riscv32-unknown-elf/include \
+		$(INC_FOLDERS_GCC) \
+		-static \
+		$(LIB_CRT_FLASH_LOAD) \
+		$^ $(LIB_RUNTIME) \
+		$ applications/seiz_trans_wo_cgra/performance.c \
+		$ applications/seiz_trans_wo_cgra/weightsAndBiasesC.c \
+		$ applications/seiz_trans_wo_cgra/transformerBlockC.c \
+		$ applications/seiz_trans_wo_cgra/addNormC.c \
+		$ applications/seiz_trans/dense_layerC.c \
+		$ applications/seiz_trans_wo_cgra/tokenPosEmbeddingC.c \
+		$ applications/seiz_trans_wo_cgra/selfattentionC.c \
+		$ applications/seiz_trans_wo_cgra/transposeC.c \
+		$ applications/seiz_trans_wo_cgra/matMulC.c \
+		$ applications/seiz_trans_wo_cgra/softmaxC.c \
+		$(LIB_BASE) \
+		$(LIB_DRIVERS) \
+		-Wl,-Map=applications/seiz_trans_wo_cgra/seiz_trans_wo_cgra.spihost.map \
+		-L $(RISCV)/riscv32-unknown-elf/lib \
+		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
+
+
 applications/hello_world/hello_world.flash_exec.elf: applications/hello_world/main.c
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
 		$(CUSTOM_GCC_FLAGS) \

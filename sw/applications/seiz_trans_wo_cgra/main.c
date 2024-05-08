@@ -7,7 +7,7 @@
 #include "main.h"
 #include "data_cpp/signal.cpp"
 //#include "data_cpp/signal_fft.cpp"
-#include "SYLT-FFT/fft.h"
+// #include "SYLT-FFT/fft.h"
 #include "weightsAndBiasesC.h"
 #include "transformerBlockC.h"
 
@@ -102,22 +102,24 @@ void stft_rearrange(quant_bit_width* rawInputSignal, quant_bit_width* stftVec, s
 
 
 int main() {
-    kcom_perf_t perf;
-    quant_bit_width* rawInputSignal = stftVec + 160*15;
-    quant_bit_width* out = stftVec + 160*15*20;
-    quant_bit_width* intermediate = stftVec + 16*1024;
-    quant_bit_width* qkv = out + 2048;
-    quant_bit_width* input_normalized = out + 4096;
-    int32_t distances[2];
-    //stft_rearrange(rawInputSignal, stftVec, 80, 5);
-    kcom_perfRecordStart(&(perf.time.infer));
-    transformerInference(stftVec, out, input_normalized, qkv, intermediate);
-    kcom_perfRecordStop(&(perf.time.infer));
-    prototype_distances(prototypes, out, distances, D_MODEL, 2);
-    printf("Distances : \n");
-    for (int i = 0; i< 2; i++)
-        printf("From the prototype of class %d = %d\n", i, distances[i]);
-    printf("Inference cycles: %d\n", perf.time.infer.spent_cy);
+    // kcom_perf_t perf;
+    // quant_bit_width* rawInputSignal = stftVec + 160*15;
+    // quant_bit_width* out = stftVec + 160*15*20;
+    // quant_bit_width* intermediate = stftVec + 16*1024;
+    // quant_bit_width* qkv = out + 2048;
+    // quant_bit_width* input_normalized = out + 4096;
+    // int32_t distances[2];
+    // //stft_rearrange(rawInputSignal, stftVec, 80, 5);
+    // kcom_perfRecordStart(&(perf.time.infer));
+    // transformerInference(stftVec, out, input_normalized, qkv, intermediate);
+    // kcom_perfRecordStop(&(perf.time.infer));
+    // prototype_distances(prototypes, out, distances, D_MODEL, 2);
+    // printf("Distances : \n");
+    // for (int i = 0; i< 2; i++)
+    //     printf("From the prototype of class %d = %d\n", i, distances[i]);
+    // printf("Inference cycles: %d\n", perf.time.infer.spent_cy);
+
+    printf("finished!\n");
     
     return 0;
 }

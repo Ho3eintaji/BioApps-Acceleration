@@ -9,6 +9,7 @@
         "config.h": "c",
         "array_output.h": "c",
         "main.h": "c",
-        "stddef.h": "c"
+        "stddef.h": "c",
+        "transformerblockc.h": "c"
     }
 }
