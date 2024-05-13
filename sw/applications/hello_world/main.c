@@ -29,9 +29,14 @@
 #include "handler.h"
 #include "heepocrates.h"
 
+// Gpio
+#define PIN_TRIGGER     4  //used for trigering and checking on oscilloscope
+void gpio_output_cfg(gpio_t *gpio, uint32_t pin);
+gpio_t gpio;
 
 
-const uint64_t SYS_FREQ = 200*1000000; //MHz
+
+const uint64_t SYS_FREQ = 150*1000000; //MHz
 void fll_cfg(uint64_t freq);
 
 
@@ -40,13 +45,18 @@ int main(int argc, char *argv[])
 
   // Set app frequency
   fll_cfg(SYS_FREQ);
+  gpio_output_cfg(&gpio, PIN_TRIGGER); // GPIO configuration for toggling
     
   /* write something to stdout */
   int i = 0, k;
   while(1){
 
-      printf("hello! %x!\n", i);
+    gpio_write(&gpio, PIN_TRIGGER, true);
+
+      printf("hello %x\n", i);
       i++;
+      for(k = 0; k < 50000; k++) asm volatile("nop");
+      gpio_write(&gpio, PIN_TRIGGER, false);
       for(k = 0; k < 50000; k++) asm volatile("nop");
   }
 
@@ -71,4 +81,12 @@ void fll_cfg(uint64_t freq) {
   }
   fll_freq_real = fll_get_freq(&fll);
   soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
+}
+
+void gpio_output_cfg(gpio_t *gpio, uint32_t pin) {
+	gpio_params_t gpio_params;
+    gpio_params.base_addr = mmio_region_from_addr((uintptr_t)GPIO_AO_START_ADDRESS);
+    gpio_init(gpio_params, gpio);
+    gpio_output_set_enabled(gpio, pin, true);
+    gpio_write(gpio, pin, false);
 }
