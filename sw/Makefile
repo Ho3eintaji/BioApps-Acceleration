@@ -124,7 +124,7 @@ applications/seiz_trans_wo_cgra/seiz_trans_wo_cgra.flash_load.elf: applications/
 		$ applications/seiz_trans_wo_cgra/weightsAndBiasesC.c \
 		$ applications/seiz_trans_wo_cgra/transformerBlockC.c \
 		$ applications/seiz_trans_wo_cgra/addNormC.c \
-		$ applications/seiz_trans/dense_layerC.c \
+		$ applications/seiz_trans_wo_cgra/dense_layerC.c \
 		$ applications/seiz_trans_wo_cgra/tokenPosEmbeddingC.c \
 		$ applications/seiz_trans_wo_cgra/selfattentionC.c \
 		$ applications/seiz_trans_wo_cgra/transposeC.c \

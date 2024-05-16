@@ -25,6 +25,7 @@ void destroyDense(Dense* dense);
 void multiplyweight(Dense* dense, size_t seq_len, int32_t* input, int32_t* output);
 void addbias(Dense* dense, size_t seq_len, int32_t* output);
 void computeDense(Dense* dense, size_t seq_len, int32_t* input, int32_t* output);
+void computeDenseOneRow(Dense* dense, size_t seq_len, int32_t* input, int32_t* output);
 void activation(Dense* dense, size_t length, int32_t* input, int32_t* output);
 
 #endif //FVLLMONTITRANSFORMER_DENSE_LAYERC_H

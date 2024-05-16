@@ -7,7 +7,7 @@
 #include "stdint.h"
 
 #define D_Q 4
-#define D_SEQ 120
+#define D_SEQ 12
 #define D_MODEL 16
 #define NUM_HEAD 4
 #define NUM_LAYERS 4
