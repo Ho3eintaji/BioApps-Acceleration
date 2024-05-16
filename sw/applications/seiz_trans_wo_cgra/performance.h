@@ -19,7 +19,15 @@ typedef struct kcom_time_diff
 
 typedef struct kcom_timing
 {
+    kcom_time_diff_t    sw;
+    kcom_time_diff_t    cgra;
+    kcom_time_diff_t    load;
+    kcom_time_diff_t    input;
+    kcom_time_diff_t    output;
+    kcom_time_diff_t    reprogramCols;
+    kcom_time_diff_t    bitstream;
     kcom_time_diff_t    infer;
+    kcom_time_diff_t    proto;
 } kcom_timing_t;
 
 typedef struct kcom_perf

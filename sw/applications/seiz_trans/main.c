@@ -166,6 +166,7 @@ int main() {
         //a delay
         // for (int i = 0; i < 1000000; i++) {asm("nop");}
         for (int i = 0; i < 100000; i++) {asm("nop");}
+
     // }
     kcom_perfRecordStop(&(kperf.time.infer));
 

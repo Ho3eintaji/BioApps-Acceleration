@@ -37,28 +37,52 @@ void removeExtraCols(int32_t* input, size_t rows, int cols) {
     }
 }
 
-void compute_SingleHeadSelfAttn(SingleHeadSelfAttn* self_attn, int32_t* input, int32_t* output, int32_t* qkv, int32_t* intermediate) {
+void add_padding(int32_t *input, int32_t *output, int rows, int columns, int padding_width) {
+    // Calcular el nuevo ancho de la matriz con el relleno
+    int new_columns = columns + padding_width;
+
+    // Crear una nueva matriz con el nuevo ancho y copiar los elementos de la matriz original
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < columns; j++) {
+            output[i * new_columns + j] = input[i * columns + j];
+        }
+        // Rellenar las nuevas columnas con ceros
+        for (int j = columns; j < new_columns; j++) {
+            output[i * new_columns + j] = 0; // O cualquier otro valor de relleno que desees
+        }
+    }
+}
+
+void remove_padding(int *matrix, int rows, int columns, int padding_width) {
+    // Calculate the new width of the matrix after removing padding
+    int new_columns = columns - padding_width;
+
+    // Shift the elements of each row to remove the padding
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < new_columns; j++) {
+            matrix[i * new_columns + j] = matrix[i * columns + j];
+        }
+    }
+}
+
+
+void compute_SingleHeadSelfAttn(SingleHeadSelfAttn* self_attn, int32_t* input, int32_t* output, int32_t* qkv, int32_t* intermediate, int32_t* aux_padding) {
     self_attn->query_layer_out = qkv;
     self_attn->key_layer_out = qkv + self_attn->pre_seq_len * self_attn->head_hidden_size;
     self_attn->value_layer_out = qkv + 2 * self_attn->pre_seq_len * self_attn->head_hidden_size;
     self_attn->key_transposed_layer_out = qkv + 3 * self_attn->pre_seq_len * self_attn->head_hidden_size;
 
-    // This 3 mmul need to think they have 124 rows instead of 121
-    // TODO: Check that the outputs have enough space for the extra 3 rows
-    computeDense(self_attn->query_layer, self_attn->pre_seq_len, input, self_attn->query_layer_out); // 121x16x4
-    computeDense(self_attn->key_layer, self_attn->pre_seq_len, input, self_attn->key_layer_out); // 121x16x4
-    computeDense(self_attn->value_layer, self_attn->pre_seq_len, input, self_attn->value_layer_out); // 121x16x4
+    computeDense(self_attn->query_layer, self_attn->pre_seq_len, input, self_attn->query_layer_out); // 13x16x4
+    computeDense(self_attn->key_layer, self_attn->pre_seq_len, input, self_attn->key_layer_out); // 13x16x4 
+    computeDense(self_attn->value_layer, self_attn->pre_seq_len, input, self_attn->value_layer_out); // 13x16x4
 
-    transpose_quant(self_attn->key_layer_out, self_attn->key_transposed_layer_out, self_attn->pre_seq_len, self_attn->head_hidden_size);
-    MatMul_scale(self_attn->key_transposed_layer_out, 1, (self_attn->pre_seq_len) * self_attn->head_hidden_size);
+    transpose_quant(self_attn->key_layer_out, self_attn->key_transposed_layer_out, self_attn->pre_seq_len +3, self_attn->head_hidden_size); // 13x4 -> 4x13
+    MatMul_scale(self_attn->key_transposed_layer_out, 1, self_attn->pre_seq_len * self_attn->head_hidden_size); //4x13
 
-    // 121x4x121
-    MatMul_multiply(self_attn->pre_seq_len, self_attn->query_layer_out, self_attn->key_transposed_layer_out, intermediate, self_attn->head_hidden_size, self_attn->pre_seq_len);
-
-    printf("\rSoftmax\n");
-    // Now intermediate is 121x121
+    MatMul_multiply(self_attn->pre_seq_len, self_attn->query_layer_out, self_attn->key_transposed_layer_out, intermediate, self_attn->head_hidden_size, self_attn->pre_seq_len); //13x4x13
+    
+    //printf("\rSoftmax\n");
     computeSoftmax(intermediate, self_attn->pre_seq_len);
     
-    // 121x121x4
     MatMul_multiply(self_attn->pre_seq_len, intermediate, self_attn->value_layer_out, output, self_attn->pre_seq_len, self_attn->head_hidden_size);
 }

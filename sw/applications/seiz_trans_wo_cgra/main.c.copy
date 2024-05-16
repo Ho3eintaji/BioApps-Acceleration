@@ -5,17 +5,16 @@
 #include <stdio.h>
 #include <math.h>
 #include "main.h"
-//#include "data_cpp/signal.cpp"
+#include "data_cpp/signal.cpp"
 //#include "data_cpp/signal_fft.cpp"
-#include "fft.h"
+// #include "SYLT-FFT/fft.h"
 #include "weightsAndBiasesC.h"
 #include "transformerBlockC.h"
 
-#include "performance.h"
 
 // FFT
-//#include "stftVec.h"
-#include "data_cpp/array_output.h"
+#include "stftVec.h"
+#include "performance.h"
 
 
 float error_check(const quant_bit_width* groundTruth, const quant_bit_width* output, size_t length){
@@ -39,15 +38,15 @@ void prototype_distances(quant_bit_width* prototypeVec, const quant_bit_width* m
     }
 }
 
-void transformerInference(quant_bit_width * transformerInput, quant_bit_width * transformerOutput, quant_bit_width* input_normalized, quant_bit_width* qkv, quant_bit_width* intermediate, quant_bit_width * aux_padding,  void* kperf){
+void transformerInference(quant_bit_width * transformerInput, quant_bit_width * transformerOutput, quant_bit_width* input_normalized, quant_bit_width* qkv, quant_bit_width* intermediate){
     quant_bit_width * weightVec[NUM_LAYERS*(3*NUM_HEAD+5)+5];
     quant_bit_width * biasVec[NUM_LAYERS*(3*NUM_HEAD+5)+5];
-    getWeights(weightVec);
-    getBiases(biasVec);
+    //getWeights(weightVec);
+    //getBiases(biasVec);
     quant_bit_width * clsTokenVector = getClassToken();
     quant_bit_width * posMatrix = getPosEmbedding();
     TransformerBlock* selfatten = createTransformerBlock(D_SEQ, D_MODEL, D_Q, NUM_HEAD, D_FF, weightVec, biasVec, clsTokenVector, posMatrix);
-    computeFixedPoint(selfatten, D_SEQ, transformerInput, input_normalized, transformerOutput, intermediate, qkv, aux_padding, kperf);
+    computeFixedPoint(selfatten, D_SEQ, transformerInput, input_normalized, transformerOutput, intermediate, qkv);
 }
 
 quant_bit_width compute_log_amp(int32_t real, int32_t imag){
@@ -99,40 +98,29 @@ void stft_rearrange(quant_bit_width* rawInputSignal, quant_bit_width* stftVec, s
             }
         }
     }
-}
-*/
+}*/
 
 
 int main() {
-    kcom_perf_t kperf;
+    // kcom_perf_t perf;
+    // quant_bit_width* rawInputSignal = stftVec + 160*15;
+    // quant_bit_width* out = stftVec + 160*15*20;
+    // quant_bit_width* intermediate = stftVec + 16*1024;
+    // quant_bit_width* qkv = out + 2048;
+    // quant_bit_width* input_normalized = out + 4096;
+    // int32_t distances[2];
+    // //stft_rearrange(rawInputSignal, stftVec, 80, 5);
+    // kcom_perfRecordStart(&(perf.time.infer));
+    // transformerInference(stftVec, out, input_normalized, qkv, intermediate);
+    // kcom_perfRecordStop(&(perf.time.infer));
+    // prototype_distances(prototypes, out, distances, D_MODEL, 2);
+    // printf("Distances : \n");
+    // for (int i = 0; i< 2; i++)
+    //     printf("From the prototype of class %d = %d\n", i, distances[i]);
+    // printf("Inference cycles: %d\n", perf.time.infer.spent_cy);
 
-
-    // Transformer   
-    // Every buffer is 16x16 = 256
-    quant_bit_width* input = STFT_rand_out; // 1st
-    quant_bit_width* output = STFT_rand_out + 4800; // Last
-
-    quant_bit_width* input_normalized = input + 256; // 2nd
-    quant_bit_width* qkv = input_normalized + 256; 
-    quant_bit_width* intermediate = qkv + 256*4; // 4 = K, V, Q and Kt
-    quant_bit_width* aux_padding = intermediate + 256;
+    printf("finished!\n");
     
-    int32_t distances[2];
-    //stft_rearrange(rawInputSignal, stftVec, 80, 5);
-        
-    kcom_perfRecordStart(&(kperf.time.infer));
-    transformerInference(input, output, input_normalized, qkv, intermediate, aux_padding, (void *) &kperf);
-    kcom_perfRecordStop(&(kperf.time.infer));
-
-    printf("\rCycles: %d\n", kperf.time.infer.spent_cy);
-    
-    prototype_distances(prototypes, output, distances, D_MODEL, 2);
-    
-    printf("\rDistances:\n");
-    for (int i = 0; i< 2; i++)
-        printf("Class %d = %d\n", i, distances[i]);
-    
-    //printf("\rEND\n");
     return 0;
 }
 
