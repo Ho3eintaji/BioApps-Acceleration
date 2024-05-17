@@ -17,6 +17,34 @@
 //#include "stftVec.h"
 #include "data_cpp/array_output.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include "core_v_mini_mcu.h"
+#include "power_manager.h"
+#include "gpio.h"
+#include "soc_ctrl.h"
+#include "rv_timer.h"
+#include "fll.h"
+#include "csr.h"
+#include "hart.h"
+#include "handler.h"
+#include "heepocrates.h"
+
+
+// For FLL
+#include "soc_ctrl.h"
+#include "rv_timer.h"
+#include "fll.h"
+// For GPIO
+#include "gpio.h"
+
+// System frequency
+const uint64_t SYS_FREQ = 160*1000000; //MHz
+void fll_cfg(uint64_t freq);
+// Gpio
+#define PIN_TRIGGER     4  //used for trigering and checking on oscilloscope
+void gpio_output_cfg(gpio_t *gpio, uint32_t pin);
+gpio_t gpio;
 
 float error_check(const quant_bit_width* groundTruth, const quant_bit_width* output, size_t length){
     long error = 0;
@@ -104,7 +132,12 @@ void stft_rearrange(quant_bit_width* rawInputSignal, quant_bit_width* stftVec, s
 
 
 int main() {
+
+    fll_cfg(SYS_FREQ); //Set frequency
+	gpio_output_cfg(&gpio, PIN_TRIGGER); // GPIO configuration for toggling
+
     kcom_perf_t kperf;
+    timerInit(); // Init timer
 
 
     // Transformer   
@@ -121,7 +154,14 @@ int main() {
     //stft_rearrange(rawInputSignal, stftVec, 80, 5);
         
     kcom_perfRecordStart(&(kperf.time.infer));
-    transformerInference(input, output, input_normalized, qkv, intermediate, aux_padding, (void *) &kperf);
+    // while(1){
+        gpio_write(&gpio, PIN_TRIGGER, true);
+        transformerInference(input, output, input_normalized, qkv, intermediate, aux_padding, (void *) &kperf);
+        gpio_write(&gpio, PIN_TRIGGER, false);
+        //a delay
+        // for (int i = 0; i < 1000000; i++) {asm("nop");}
+        // for (int i = 0; i < 1; i++) {asm("nop");}
+    // }
     kcom_perfRecordStop(&(kperf.time.infer));
 
     printf("\rCycles: %d\n", kperf.time.infer.spent_cy);
@@ -132,8 +172,35 @@ int main() {
     for (int i = 0; i< 2; i++)
         printf("Class %d = %d\n", i, distances[i]);
     
-    //printf("\rEND\n");
+    printf("\rEND\n");
     return 0;
 }
 
+
+void fll_cfg(uint64_t freq) {
+  uint32_t fll_freq_real;
+  fll_t fll;
+  soc_ctrl_t soc_ctrl;
+  uint32_t fll_status;
+  // 2.1 FLL peripheral structure to access the registers
+  fll.base_addr = mmio_region_from_addr((uintptr_t)FLL_START_ADDRESS);
+  fll_init(&fll);
+  fll_status = fll_status_get(&fll);
+  soc_ctrl.base_addr = mmio_region_from_addr((uintptr_t)SOC_CTRL_START_ADDRESS);
+  //2.4 Set default app frequency
+  fll_set_freq(&fll, freq);
+  for (int j = 0; j < 10000; j++) {
+    asm volatile("nop");
+  }
+  fll_freq_real = fll_get_freq(&fll);
+  soc_ctrl_set_frequency(&soc_ctrl, fll_freq_real);
+}
+
+void gpio_output_cfg(gpio_t *gpio, uint32_t pin) {
+	gpio_params_t gpio_params;
+    gpio_params.base_addr = mmio_region_from_addr((uintptr_t)GPIO_AO_START_ADDRESS);
+    gpio_init(gpio_params, gpio);
+    gpio_output_set_enabled(gpio, pin, true);
+    gpio_write(gpio, pin, false);
+}
 
