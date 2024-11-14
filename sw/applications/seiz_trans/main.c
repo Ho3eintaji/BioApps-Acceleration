@@ -39,13 +39,15 @@
 // For GPIO
 #include "gpio.h"
 
+gpio_t gpio;
+
 // System frequency
 const uint64_t SYS_FREQ = 160*1000000; //MHz
 void fll_cfg(uint64_t freq);
 // Gpio
 #define PIN_TRIGGER     4  //used for trigering and checking on oscilloscope
 void gpio_output_cfg(gpio_t *gpio, uint32_t pin);
-gpio_t gpio;
+void transformerInference(quant_bit_width * transformerInput, quant_bit_width * transformerOutput, quant_bit_width* input_normalized, quant_bit_width* qkv, quant_bit_width* intermediate, quant_bit_width * aux_padding,  void* kperf);
 
 
 
@@ -70,16 +72,7 @@ void prototype_distances(quant_bit_width* prototypeVec, const quant_bit_width* m
     }
 }
 
-void transformerInference(quant_bit_width * transformerInput, quant_bit_width * transformerOutput, quant_bit_width* input_normalized, quant_bit_width* qkv, quant_bit_width* intermediate, quant_bit_width * aux_padding,  void* kperf){
-    quant_bit_width * weightVec[NUM_LAYERS*(3*NUM_HEAD+5)+5];
-    quant_bit_width * biasVec[NUM_LAYERS*(3*NUM_HEAD+5)+5];
-    getWeights(weightVec);
-    getBiases(biasVec);
-    quant_bit_width * clsTokenVector = getClassToken();
-    quant_bit_width * posMatrix = getPosEmbedding();
-    TransformerBlock* selfatten = createTransformerBlock(D_SEQ, D_MODEL, D_Q, NUM_HEAD, D_FF, weightVec, biasVec, clsTokenVector, posMatrix);
-    computeFixedPoint(selfatten, D_SEQ, transformerInput, input_normalized, transformerOutput, intermediate, qkv, aux_padding, kperf);
-}
+
 
 quant_bit_width compute_log_amp(int32_t real, int32_t imag){
     real = MUL_HQ(real, 25) >> (NUM_FRACTION_BITS - 9);
@@ -136,8 +129,11 @@ void stft_rearrange(quant_bit_width* rawInputSignal, quant_bit_width* stftVec, s
 
 int main() {
 
+    
+
     fll_cfg(SYS_FREQ); //Set frequency
 	gpio_output_cfg(&gpio, PIN_TRIGGER); // GPIO configuration for toggling
+    uint64_t time_cyc = 0;
 
     //CGRA
     kcom_perf_t kperf;
@@ -158,17 +154,20 @@ int main() {
     int32_t distances[2];
     //stft_rearrange(rawInputSignal, stftVec, 80, 5);
         
-    kcom_perfRecordStart(&(kperf.time.infer));
+    // kcom_perfRecordStart(&(kperf.time.infer));
     // while(1){
-        gpio_write(&gpio, PIN_TRIGGER, true);
+        // gpio_write(&gpio, PIN_TRIGGER, true);
         transformerInference(input, output, input_normalized, qkv, intermediate, aux_padding, (void *) &kperf);
-        gpio_write(&gpio, PIN_TRIGGER, false);
+        // gpio_write(&gpio, PIN_TRIGGER, false);
         //a delay
         // for (int i = 0; i < 1000000; i++) {asm("nop");}
         // for (int i = 0; i < 1; i++) {asm("nop");}
 
     // }
-    kcom_perfRecordStop(&(kperf.time.infer));
+    // printf("\rCycles: %d\n", time_cyc);
+    // printf("\rTime_us: %d\n", time_cyc/ (SYS_FREQ/1000000));
+
+    // kcom_perfRecordStop(&(kperf.time.infer));
 
     printf("\rCycles: %d\n", kperf.time.infer.spent_cy);
     
@@ -209,3 +208,15 @@ void gpio_output_cfg(gpio_t *gpio, uint32_t pin) {
     gpio_write(gpio, pin, false);
 }
 
+void transformerInference(quant_bit_width * transformerInput, quant_bit_width * transformerOutput, quant_bit_width* input_normalized, quant_bit_width* qkv, quant_bit_width* intermediate, quant_bit_width * aux_padding,  void* kperf){
+    // gpio_write(&gpio, PIN_TRIGGER, true);
+    quant_bit_width * weightVec[NUM_LAYERS*(3*NUM_HEAD+5)+5];
+    quant_bit_width * biasVec[NUM_LAYERS*(3*NUM_HEAD+5)+5];
+    getWeights(weightVec);
+    getBiases(biasVec);
+    quant_bit_width * clsTokenVector = getClassToken();
+    quant_bit_width * posMatrix = getPosEmbedding();
+    TransformerBlock* selfatten = createTransformerBlock(D_SEQ, D_MODEL, D_Q, NUM_HEAD, D_FF, weightVec, biasVec, clsTokenVector, posMatrix);
+    computeFixedPoint(selfatten, D_SEQ, transformerInput, input_normalized, transformerOutput, intermediate, qkv, aux_padding, kperf, &gpio);
+    
+}

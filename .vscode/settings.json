@@ -1,5 +1,7 @@
 {
     "files.associations": {
+        "*.sv.tpl": "systemverilog",
+        "*.ld.tpl": "ld",
         "cgra.h": "c",
         "core_v_mini_mcu.h": "c",
         "handler.h": "c",
@@ -10,6 +12,8 @@
         "array_output.h": "c",
         "main.h": "c",
         "stddef.h": "c",
-        "transformerblockc.h": "c"
+        "transformerblockc.h": "c",
+        "*.inc": "c",
+        "stdlib.h": "c"
     }
 }

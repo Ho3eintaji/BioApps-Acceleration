@@ -139,6 +139,8 @@ int main() {
     kcom_perf_t kperf;
     timerInit(); // Init timer
 
+    uint64_t time_cyc = 0;
+
 
     // Transformer   
     // Every buffer is 16x16 = 256
@@ -156,7 +158,12 @@ int main() {
     kcom_perfRecordStart(&(kperf.time.infer));
     // while(1){
         gpio_write(&gpio, PIN_TRIGGER, true);
+        time_cyc = getTime_cy();
+        printf("\rCycles: %d\n", time_cyc);
+        
         transformerInference(input, output, input_normalized, qkv, intermediate, aux_padding, (void *) &kperf);
+        time_cyc = getTime_cy() - time_cyc;
+        printf("\rCycles_: %d\n", time_cyc);
         gpio_write(&gpio, PIN_TRIGGER, false);
         //a delay
         // for (int i = 0; i < 1000000; i++) {asm("nop");}
@@ -164,9 +171,9 @@ int main() {
     // }
     kcom_perfRecordStop(&(kperf.time.infer));
 
-    printf("\rCycles: %d\n", kperf.time.infer.spent_cy);
+    // printf("\rCycles: %d\n", kperf.time.infer.spent_cy);
     
-    prototype_distances(prototypes, output, distances, D_MODEL, 2);
+    // prototype_distances(prototypes, output, distances, D_MODEL, 2);
     
     printf("\rDistances:\n");
     for (int i = 0; i< 2; i++)

@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include "transformerBlockC.h"
 #include "multiply_cgra.h"
+#include "gpio.h"
+
+
 
 SingleHeadSelfAttn global_selfatten [NUM_LAYERS * NUM_HEAD];
 Dense global_query_layer[NUM_LAYERS * NUM_HEAD];
@@ -74,43 +77,78 @@ void destroyTransformerBlock(TransformerBlock* transformerBlock) {
 
 void computeFixedPoint(TransformerBlock* transformerBlock, size_t seq_len, quant_bit_width * input,
                        quant_bit_width * input_normalized, quant_bit_width * output,
-                       quant_bit_width* intermediate, quant_bit_width* qkv, quant_bit_width * aux_padding, void * kperf) {
+                       quant_bit_width* intermediate, quant_bit_width* qkv, quant_bit_width * aux_padding, void * kperf, gpio_t * gpio) {
+
+    
+
+    
 
     //printf("\rStep 1\n");
     normalize(&transformerBlock->addNorm, input, input); // 12x400
     computeDense(transformerBlock->patchEmbedding, seq_len, input, output); // 12x400x16 -> OK
     normalize(&transformerBlock->addNorm2, output, output); // 12x16
 
-    clsConcatenate(transformerBlock->token, output, input); // 13x16
+    clsConcatenate(transformerBlock->token, output, input); // 13x16 
     seq_len++;
     posEmbedding(transformerBlock->token, input); // 13x16
+     
 
     //printf("\rStep 2\n");
+    int i_first = 1;
+    
     for (int l = 0; l < 4; l++) {
+        
         normalize(&transformerBlock->transformer_layer_0_addNorm[l], input, input_normalized); // 13x16
+        gpio_write(gpio, 4, false);
         for (int n = 0; n < NUM_HEAD; n++) {
             // printf("\rl%d: Step 3\n", l);
             compute_SingleHeadSelfAttn(transformerBlock->selfatten[l * NUM_HEAD + n], input_normalized,
-                                       output + n * (seq_len * transformerBlock->head_hidden_size_), qkv, intermediate, aux_padding);
+                                       output + n * (seq_len * transformerBlock->head_hidden_size_), qkv, intermediate, aux_padding, gpio);
+            gpio_write(gpio, 4, false);
 //            destroy_SingleHeadSelfAttn(transformerBlock->selfatten[l * NUM_HEAD + n]);
         }
         //printf("\rl%d: Step 4\n", l);
+        
         multihead_transpose(output, intermediate, seq_len, transformerBlock->head_hidden_size_, transformerBlock->num_heads_);
+        gpio_write(gpio, 4, false);
 
         int padding = 3;
+
         computeDense(transformerBlock->condense[l], seq_len + padding, intermediate, output); // 13x16x16
+        gpio_write(gpio, 4, false);
+
+
 
         add(input, output, seq_len, transformerBlock->input_dim_ ); // 13x16
+        gpio_write(gpio, 4, false);
+
+                   
 
         normalize(&transformerBlock->transformer_layer_1_addNorm[l], input, input_normalized); // 13x16
+        
         computeDense(transformerBlock->feedForward0[l], seq_len + padding, input_normalized, intermediate); // 13x16x4
         activation(transformerBlock->feedForward0[l], seq_len * transformerBlock->ff_size_, intermediate, intermediate); // 13x4
+                
 
         computeDense(transformerBlock->feedForward1[l], seq_len + padding, intermediate, output); // 13x4x16
+
+        
         add(input, output, seq_len, transformerBlock->input_dim_ ); // 13x16
+        gpio_write(gpio, 4, false);
     }
+          
     //printf("\rStep 5\n");
     normalize(&transformerBlock->mlp_head_norm, input, input_normalized); // 13x16
+
+    //   if (i_first == 1) {
+    //         i_first = 0;
+    //         gpio_write(gpio, 4, true);
+    //     }
+    
     computeDenseOneRow(transformerBlock->mlp_head_linear, 1, input_normalized, output); // 1x16x16
+    gpio_write(gpio, 4, false);
+
+
+    
 }
 

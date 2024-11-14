@@ -14,6 +14,7 @@
 #include "param.h"
 #include "transposeC.h"
 #include "cgra.h"
+#include "gpio.h"
 
 typedef struct {
     size_t num_heads_;
@@ -43,6 +44,6 @@ typedef struct {
 
 TransformerBlock* createTransformerBlock(size_t pre_seq_len, size_t input_dim, size_t head_hidden_size, size_t num_heads, size_t ff_size, int32_t** weightVector, int32_t** biasVector, int32_t* clsTokenVector, int32_t* posMatrix);
 void destroyTransformerBlock(TransformerBlock* transformerBlock);
-void computeFixedPoint(TransformerBlock* transformerBlock, size_t seq_len, int32_t* input, int32_t* input_normalized, int32_t* output, int32_t* intermediate, int32_t* aux_padding, int32_t* qkv, void * kperf);
+void computeFixedPoint(TransformerBlock* transformerBlock, size_t seq_len, int32_t* input, int32_t* input_normalized, int32_t* output, int32_t* intermediate, int32_t* aux_padding, int32_t* qkv, void * kperf, gpio_t * gpio);
 
 #endif //FVLLMONTITRANSFORMER_TRANSFORMERBLOCK_H

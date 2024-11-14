@@ -10,8 +10,9 @@
 #include <math.h>
 #include <stdlib.h>
 #include "param.h"
+#include "gpio.h"
 
-void computeSoftmax(int32_t* input, size_t seq_len);
+void computeSoftmax(int32_t* input, size_t seq_len, gpio_t * gpio);
 
 
 #endif //FVLLMONTITRANSFORMER_SOFTMAXC_H
