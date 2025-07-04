@@ -3,9 +3,6 @@
 //
 
 #include "softmaxC.h"
-#include "gpio.h"
-
-int k_first = 1;
 
 void computeSoftmax(int32_t* input, size_t seq_len, gpio_t * gpio) {
 
@@ -13,11 +10,6 @@ void computeSoftmax(int32_t* input, size_t seq_len, gpio_t * gpio) {
     size_t width = seq_len;
     float input_float = 0.0f;
     for (int i = 0; i < seq_len; i++) {
-
-        if (k_first) {
-        gpio_write(gpio, 4, true);
-        k_first = 0;
-        } 
         
         // Look for the biggest value of the row
         int32_t max_val = input[i * seq_len];
@@ -43,8 +35,6 @@ void computeSoftmax(int32_t* input, size_t seq_len, gpio_t * gpio) {
         for (int j = 0; j < width; j++) {
             input[i * seq_len + j] = (int32_t) MUL(input[i * seq_len + j], sum_inv_int);
         }
-
-        gpio_write(gpio, 4, false);
     }
     
 }
