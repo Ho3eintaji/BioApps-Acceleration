@@ -1,21 +1,22 @@
-// Copyright 2023 EPFL
-// Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
-// SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
-
+#include <stdio.h>
+#include <stdint.h>
+#include <math.h>  
+#include "cgra_kernels_common.h"
+#include "data.h"
+#include "conv_wp.h"
+// #include "conv_oc.h"
+// #include "conv_im2c_oc.h"
+// #include "conv_im2c_ic.h"
 #include "heepocrates.h"
 #include "core_v_mini_mcu.h"
 #include "power_manager.h"
 #include "gpio.h"
 #include "soc_ctrl.h"
 #include "rv_timer.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "fll.h"
 #include "csr.h"
 #include "hart.h"
 #include "handler.h"
-#include "data.h"
-#include "cgra_bitstream.h"
 #include "rv_plic.h"
 #include "rv_plic_regs.h"
 #include "heepocrates_ctrl.h"
@@ -26,15 +27,8 @@
 #define CHECK_RESULTS
 #define GPIO_TRIGGER
 
-
 #define CGRA_COL_INPUT_SIZE 4
 #define PIN_TRIGGER     4  //used for trigering and checking on oscilloscope
-
-
-
-
-// // Handler for the CGRA interruption
-// void handler_irq_cgra(uint32_t id);
 
 // Gpio
 void gpio_output_cfg(gpio_t *gpio, uint32_t pin);
@@ -44,185 +38,245 @@ gpio_t gpio;
 const uint64_t SYS_FREQ = 80*1000000; //MHz
 void fll_cfg(uint64_t freq);
 
-// one dim slot x n input values (data ptrs, constants, ...)
-// int32_t cgra_input[CGRA_N_SLOTS][10] __attribute__ ((aligned (4)));
-static int32_t cgra_input[CGRA_N_COLS][CGRA_COL_INPUT_SIZE]    __attribute__ ((aligned (4)));
-// int8_t cgra_intr_flag;
-volatile bool               cgra_intr_flag;
-// volatile int32_t cgra_res[OUTPUT_LENGTH] = {0};
-// int32_t exp_res[OUTPUT_LENGTH] = {0};
-// CGRA variables
-static cgra_t               cgra;
-static uint8_t              cgra_slot;
 
-// Interrupt controller variables
-dif_plic_params_t rv_plic_params;
-dif_plic_t rv_plic;
-dif_plic_result_t plic_res;
-dif_plic_irq_id_t intr_num;
+// void __attribute__((optimize("Ofast"))) conv2D();
+void conv2D();
+uint32_t check(double tolerance);
 
+static kcom_kernel_t *kernels[] = {
+      &conv_wp_kernel,
+    //   &conv_oc_kernel,
+    //   &conv_im2c_oc_kernel,
+      // &conv_im2c_ic_kernel, //this one is not working
+};
 
+static kcom_perf_t kperf;
 
-void handler_irq_external(void) {
-    // Claim/clear interrupt
-    plic_res = dif_plic_irq_claim(&rv_plic, 0, &intr_num);
-    if (plic_res == kDifPlicOk && intr_num == CGRA_INTR) {
-      cgra_intr_flag = 1;
-    }
-}
-
-
-int32_t R_out[R_ROWS*R_COLS]; 
-
-
-
-void __attribute__((noinline, aligned(4))) cpuMatMul(data_t *A, data_t *B, data_t *R_cpu, unsigned int a_rows, unsigned int a_cols, unsigned int b_cols);
-
-
-
-int main(int argc, char const *argv[])
+void main()
 {
 
-    // Set app frequency
-    fll_cfg(SYS_FREQ);
-    gpio_output_cfg(&gpio, PIN_TRIGGER); // GPIO configuration for toggling
-    gpio_write(&gpio, PIN_TRIGGER, false);
+  // Initial phase
+  fll_cfg(SYS_FREQ);
+  gpio_output_cfg(&gpio, PIN_TRIGGER); // GPIO configuration for toggling
+  gpio_write(&gpio, PIN_TRIGGER, false);
 
 
+  uint32_t time = 0;
+	uint8_t kernels_n = sizeof(kernels) / sizeof(kcom_kernel_t *);
+	kcom_kernel_t *kernel;
 
-    unsigned int a_rows = A_ROWS;
-    unsigned int a_cols = A_COLS;
-    unsigned int b_cols = B_COLS;
+	kcom_init();
 
-    // Init the PLIC
-    rv_plic_params.base_addr = mmio_region_from_addr((uintptr_t)PLIC_START_ADDRESS);
-    plic_res = dif_plic_init(rv_plic_params, &rv_plic);
+  while(1){
 
-    if (plic_res != kDifPlicOk) {
-        printf("PLIC init failed\n;");
-        return EXIT_FAILURE;
-    }
+  #ifdef RUN_CGRA
 
-    // Set CGRA priority to 1 (target threshold is by default 0) to trigger an interrupt to the target (the processor)
-    plic_res = dif_plic_irq_set_priority(&rv_plic, CGRA_INTR, 1);
-    if (plic_res != kDifPlicOk) {
-        printf("Set CGRA interrupt priority to 1 failed\n;");
-        return EXIT_FAILURE;
-    }
+  gpio_write(&gpio, PIN_TRIGGER, true);
+	for (uint8_t ker_idx = 0; ker_idx < kernels_n; ker_idx++){
+            kernel = kernels[ker_idx];
+            uint8_t kernel_id = (ker_idx % (CGRA_KMEM_SIZE - 1)) + 1; // Must be between 1 and (KMEM_SIZE - 1).
+            kernel->kmem[kernel_id] = kernel->kmem[1];                // By default the kernels come located with id = 1.
+            
+            kcom_load(kernel);
+            /* Load (of inputs). */
 
-    plic_res = dif_plic_irq_set_enabled(&rv_plic, CGRA_INTR, 0, kDifPlicToggleEnabled);
-    if (plic_res != kDifPlicOk) {
-        printf("Enable CGRA interrupt failed\n;");
-        return EXIT_FAILURE;
-    }
+            // put if kernel name is conv_wp
+            if (strcmp(kernel->name, "conv_wp") == 0){
 
-    // Enable interrupt on processor side
-    // Enable global interrupt for machine-level interrupts
-    CSR_SET_BITS(CSR_REG_MSTATUS, 0x8);
-    // Set mie.MEIE bit to one to enable machine-level external interrupts
-    const uint32_t mask = 1 << 11;//IRQ_EXT_ENABLE_OFFSET;
-    CSR_SET_BITS(CSR_REG_MIE, mask);
-    cgra_intr_flag = 0;
+                for(int output_channel = 0; output_channel < N_filter; output_channel++){
+                    for(int input_channel = 0; input_channel < C_input; input_channel++){
+                        kernel->config(input_channel,output_channel);
 
-    heepocrates_ctrl_t heepocrates_ctrl;
-    heepocrates_ctrl.base_addr = mmio_region_from_addr((uintptr_t)HEEPOCRATES_CTRL_START_ADDRESS);
-    heepocrates_ctrl_cgra_disable(&heepocrates_ctrl, 0);
-    
+                        #ifdef POWER_MEASURE
+                        while(1){
+                        #endif //POWER_MEASURE
+                        /* CGRA Execution */
+                        kcom_perfRecordIntrSet(&(kperf.time.cgra));
+                        kcom_launchKernel(kernel_id);
+                        kcom_waitingForIntr();
 
-    cgra_intr_flag = 0;
-
-
-
-    while(1) {
-
-        #ifdef RUN_CGRA
-
-            // CGRA
-            // cgra_cmem_init(cgra_imem_bistream, cgra_kem_bitstream);
-            cgra_cmem_init(cgra_imem_bitstream, cgra_kmem_bitstream);
-            // cgra.base_addr = mmio_region_from_addr((uintptr_t)OECGRA_CONFIG_REGS_START_ADDRESS);
-            cgra.base_addr = mmio_region_from_addr((uintptr_t)CGRA_PERIPH_START_ADDRESS);
-            cgra_slot = cgra_get_slot(&cgra);
-
-            // Col 0: &B[0][0], nItLoopColsC, &A[0][0], &C[0][3]
-            cgra_input[0][0] = &B[0];
-            cgra_input[0][1] = R_COLS/CGRA_N_ROWS;
-            cgra_input[0][2] = &A[0];
-            cgra_input[0][3] = &R_out[3];
-            // Col 1: &C[1][0], &B[0][1], nItLoopsColsA, &A[1][0]
-            cgra_input[1][0] = &R_out[R_COLS];
-            cgra_input[1][1] = &B[1];
-            cgra_input[1][2] = A_COLS;
-            cgra_input[1][3] = &A[A_COLS];
-            // Col 2: &A[2][0], &C[2][1], &B[0][2], nItLoopColsC
-            cgra_input[2][0] = &A[2*A_COLS];
-            cgra_input[2][1] = &R_out[2*R_COLS+1];
-            cgra_input[2][2] = &B[2];
-            cgra_input[2][3] = R_COLS/CGRA_N_ROWS;
-            // Col 3: nItLoopRowsC, &A[3][0], &C[3][2], &B[0][3], 
-            cgra_input[3][0] = R_ROWS/CGRA_N_COLS;
-            cgra_input[3][1] = &A[3*A_COLS];
-            cgra_input[3][2] = &R_out[3*R_COLS+2];
-            cgra_input[3][3] = &B[3];
-
-            // Set CGRA kernel L/S pointers
-            for(int col_idx = 0 ; col_idx < CGRA_N_COLS ; col_idx++){
-                cgra_set_read_ptr ( &cgra, cgra_slot, (uint32_t) cgra_input[col_idx], col_idx );
-            }
-
-            gpio_write(&gpio, PIN_TRIGGER, true);
-            #ifdef POWER_MEASURE
-            while(1){
-            #endif
-
-            // Launch CGRA kernel
-            cgra_set_kernel( &cgra, cgra_slot, TRANSFORMER );
-
-            // Wait CGRA is done
-            cgra_intr_flag=0;
-            while(cgra_intr_flag==0) {
-                wait_for_interrupt();
-            }
-            // Complete the interrupt
-            plic_res = dif_plic_irq_complete(&rv_plic, 0, &intr_num);
-            if (plic_res != kDifPlicOk || intr_num != CGRA_INTR) {
-                printf("CGRA interrupt complete failed\n");
-                return EXIT_FAILURE;
-            }
-            #ifdef POWER_MEASURE
-            }
-            #endif
-            gpio_write(&gpio, PIN_TRIGGER, false);
-            // Toggle GPIO to measure power consumption}
-        #else
-            gpio_write(&gpio, PIN_TRIGGER, true);
-            #ifdef POWER_MEASURE 
-            while(1){ 
-            #endif
-            cpuMatMul(A, B, R_out, A_ROWS, A_COLS, B_COLS);
-            #ifdef POWER_MEASURE
-            }
-            #endif
-            gpio_write(&gpio, PIN_TRIGGER, false);
-        #endif
-
-
-        #ifdef CHECK_RESULTS
-            // check carus, oe-cgra, and cput results to be the same as the golden result
-            for (unsigned int i = 0; i < R_ROWS; i++) {
-                for (unsigned int j = 0; j < R_COLS; j++) {
-                    if (R_out[i*R_COLS+j] != R[i*R_COLS+j]) {
-                        printf("CGRA|gold R[%u,%u]: %x %x\n", i, j, R_out[i*R_COLS+j], R[i*R_COLS+j]);
-                        // return -1;
+                        #ifdef POWER_MEASURE
+                        }
+                        #endif //POWER_MEASURE
                     }
                 }
             }
-            printf("Results are correct!\n");
-        #endif
+            // else if it is conv_oc
+            else if (strcmp(kernel->name, "conv_oc") == 0){
+            }
+      }
+      gpio_write(&gpio, PIN_TRIGGER, false);
+    printf("CGRA kernel execution finished\n");
+  #else // RUN_CGRA
 
+  gpio_write(&gpio, PIN_TRIGGER, true);
+
+  #ifdef POWER_MEASURE
+  while(1){
+  #endif //POWER_MEASURE
+
+  conv2D();
+  
+  #ifdef POWER_MEASURE
+  }
+  #endif //POWER_MEASURE
+  gpio_write(&gpio, PIN_TRIGGER, false);
+
+  printf("CPU kernel execution finished\n");
+  
+  #endif // RUN_CGRA
+
+
+      // check(2.0);
+  
+}
+
+	return 0;
+}
+
+void conv2D()
+{
+  int32_t l, r, c, k, i, j, w, t;
+  int32_t S;
+  int32_t coeff;
+  int32_t data;
+  for (l = 0; l < N_output; l++)
+  {
+    for (k = 0; k < N_filter; k++)
+    {
+      for (r = 0; r < row_output; r++)
+      {
+        for (c = 0; c < col_output; c++)
+        {
+          S = 0;
+          for (w = 0; w < C_filter; w++)
+          {
+            for (i = -FILT_HALF_x; i <= FILT_HALF_x; i++)
+            {
+              for (j = -FILT_HALF_y; j <= FILT_HALF_y; j++)
+              {
+                coeff = filter[k][w][i + FILT_HALF_x][j + FILT_HALF_y];
+
+                data = input[l][w][r + i + FILT_HALF_x][c + j + FILT_HALF_y];
+                S += coeff * data;
+              }
+            }
+          }
+          CPU_output[l][k][r][c] = S;
+        }
+      }
     }
-      
-    return 0;
+  }
+
+}
+
+uint32_t check(double tolerance)
+{
+    uint32_t errors = 0;
+    uint32_t not_tolerated_errors = 0;
+
+    for (int l = 0; l < N_filter; l++) {
+        uint32_t filter_errors = 0;
+
+        for (int i = 0; i < row_output; i++) {
+            for (int j = 0; j < col_output; j++) {
+                int expected = CPU_output[0][l][i][j];
+                int obtained = CGRA_output[l][i][j];
+
+                if (expected != obtained) {
+                  errors++;
+                    // Compute percentage error
+                    double error_percentage = fabs((double)(expected - obtained) / expected) * 100.0;
+
+                    if (error_percentage > tolerance) {
+                      not_tolerated_errors++;
+                        printf("Error @ %d %d: Expected %u, got %u (Error: %f)\n", i, j, expected, obtained, error_percentage);
+                    }
+                }
+            }
+        }
+    }
+    printf("Total errors: %d, Not tolerated errors: %d\n", errors, not_tolerated_errors);
+
+    return not_tolerated_errors;
+}
+
+
+void  im2col_conv(int32_t *in, int out_row, int out_col, int output_channel)
+{
+
+    int i, j, k, l, c, m, n, o, p, q, r, s, t, u, v, w;
+
+    for (i = 0; i < row_filter; i++)
+    {
+
+        in[0 + C_filter * 0 + C_filter * col_filter*i] = input[0][i+out_row][0+out_col][0];
+        in[1 + C_filter * 0 + C_filter * col_filter*i] = input[0][i+out_row][0+out_col][1];
+        in[2 + C_filter * 0 + C_filter * col_filter*i] = input[0][i+out_row][0+out_col][2];
+        in[3 + C_filter * 0 + C_filter * col_filter*i] = input[0][i+out_row][0+out_col][3];
+        in[4 + C_filter * 0 + C_filter * col_filter*i] = input[0][i+out_row][0+out_col][4];
+        in[5 + C_filter * 0 + C_filter * col_filter*i] = input[0][i+out_row][0+out_col][5];
+        in[6 + C_filter * 0 + C_filter * col_filter*i] = input[0][i+out_row][0+out_col][6];
+        in[7 + C_filter * 0 + C_filter * col_filter*i] = input[0][i+out_row][0+out_col][7];
+        in[8 + C_filter * 0 + C_filter * col_filter*i] = input[0][i+out_row][0+out_col][8];
+        in[9 + C_filter * 0 + C_filter * col_filter*i] = input[0][i+out_row][0+out_col][9];
+        in[10 + C_filter * 0 + C_filter * col_filter*i] = input[0][i+out_row][0+out_col][10];
+        in[11 + C_filter * 0 + C_filter * col_filter*i] = input[0][i+out_row][0+out_col][11];
+        in[12 + C_filter * 0 + C_filter * col_filter*i] = input[0][i+out_row][0+out_col][12];
+        in[13 + C_filter * 0 + C_filter * col_filter*i] = input[0][i+out_row][0+out_col][13];
+        in[14 + C_filter * 0 + C_filter * col_filter*i] = input[0][i+out_row][0+out_col][14];
+        in[15 + C_filter * 0 + C_filter * col_filter*i] = input[0][i+out_row][0+out_col][15];
+        in[0 + C_filter * 1 + C_filter * col_filter*i] = input[0][i+out_row][1+out_col][0];
+        in[1 + C_filter * 1 + C_filter * col_filter*i] = input[0][i+out_row][1+out_col][1];
+        in[2 + C_filter * 1 + C_filter * col_filter*i] = input[0][i+out_row][1+out_col][2];
+        in[3 + C_filter * 1 + C_filter * col_filter*i] = input[0][i+out_row][1+out_col][3];
+        in[4 + C_filter * 1 + C_filter * col_filter*i] = input[0][i+out_row][1+out_col][4];
+        in[5 + C_filter * 1 + C_filter * col_filter*i] = input[0][i+out_row][1+out_col][5];
+        in[6 + C_filter * 1 + C_filter * col_filter*i] = input[0][i+out_row][1+out_col][6];
+        in[7 + C_filter * 1 + C_filter * col_filter*i] = input[0][i+out_row][1+out_col][7];
+        in[8 + C_filter * 1 + C_filter * col_filter*i] = input[0][i+out_row][1+out_col][8];
+        in[9 + C_filter * 1 + C_filter * col_filter*i] = input[0][i+out_row][1+out_col][9];
+        in[10 + C_filter * 1 + C_filter * col_filter*i] = input[0][i+out_row][1+out_col][10];
+        in[11 + C_filter * 1 + C_filter * col_filter*i] = input[0][i+out_row][1+out_col][11];
+        in[12 + C_filter * 1 + C_filter * col_filter*i] = input[0][i+out_row][1+out_col][12];
+        in[13 + C_filter * 1 + C_filter * col_filter*i] = input[0][i+out_row][1+out_col][13];
+        in[14 + C_filter * 1 + C_filter * col_filter*i] = input[0][i+out_row][1+out_col][14];
+        in[15 + C_filter * 1 + C_filter * col_filter*i] = input[0][i+out_row][1+out_col][15];
+        in[0 + C_filter * 2 + C_filter * col_filter*i] = input[0][i+out_row][2+out_col][0];
+        in[1 + C_filter * 2 + C_filter * col_filter*i] = input[0][i+out_row][2+out_col][1];
+        in[2 + C_filter * 2 + C_filter * col_filter*i] = input[0][i+out_row][2+out_col][2];
+        in[3 + C_filter * 2 + C_filter * col_filter*i] = input[0][i+out_row][2+out_col][3];
+        in[4 + C_filter * 2 + C_filter * col_filter*i] = input[0][i+out_row][2+out_col][4];
+        in[5 + C_filter * 2 + C_filter * col_filter*i] = input[0][i+out_row][2+out_col][5];
+        in[6 + C_filter * 2 + C_filter * col_filter*i] = input[0][i+out_row][2+out_col][6];
+        in[7 + C_filter * 2 + C_filter * col_filter*i] = input[0][i+out_row][2+out_col][7];
+        in[8 + C_filter * 2 + C_filter * col_filter*i] = input[0][i+out_row][2+out_col][8];
+        in[9 + C_filter * 2 + C_filter * col_filter*i] = input[0][i+out_row][2+out_col][9];
+        in[10 + C_filter * 2 + C_filter * col_filter*i] = input[0][i+out_row][2+out_col][10];
+        in[11 + C_filter * 2 + C_filter * col_filter*i] = input[0][i+out_row][2+out_col][11];
+        in[12 + C_filter * 2 + C_filter * col_filter*i] = input[0][i+out_row][2+out_col][12];
+        in[13 + C_filter * 2 + C_filter * col_filter*i] = input[0][i+out_row][2+out_col][13];
+        in[14 + C_filter * 2 + C_filter * col_filter*i] = input[0][i+out_row][2+out_col][14];
+        in[15 + C_filter * 2 + C_filter * col_filter*i] = input[0][i+out_row][2+out_col][15];
+    }
+
+}
+
+
+// Apparantely it is used for im2c_oc and oc kernels
+// loading_buffer(kernel->output);
+void loading_buffer_oc(int32_t **cgra_output){
+    for(int i = 0; i < 4 ; i++){
+        CGRA_output[4*i]  [0][0] = cgra_output[0][i];
+        CGRA_output[4*i+1][0][0] = cgra_output[1][i];
+        CGRA_output[4*i+2][0][0] = cgra_output[2][i];
+        CGRA_output[4*i+3][0][0] = cgra_output[3][i];
+    }
+}
+
+// Apparantely it is used for im2c_ic
+void loading_buffer_im2c_ic(int32_t **cgra_output){
+    CGRA_output[0][0][0]=cgra_output[3][0];
 }
 
 void fll_cfg(uint64_t freq) {
@@ -250,16 +304,4 @@ void gpio_output_cfg(gpio_t *gpio, uint32_t pin) {
     gpio_init(gpio_params, gpio);
     gpio_output_set_enabled(gpio, pin, true);
     gpio_write(gpio, pin, false);
-}
-
-void cpuMatMul(data_t *A, data_t *B, data_t *R_cpu, unsigned int a_rows, unsigned int a_cols, unsigned int b_cols)
-{
-    for (unsigned int i = 0; i < a_rows; i++) {
-        for (unsigned int j = 0; j < b_cols; j++) {
-            R_cpu[i*b_cols+j] = 0;
-            for (unsigned int k = 0; k < a_cols; k++) {
-                R_cpu[i*b_cols+j] += A[i*a_cols+k] * B[k*b_cols+j];
-            }
-        }
-    }
 }

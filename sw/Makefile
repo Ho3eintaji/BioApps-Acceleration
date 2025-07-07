@@ -188,7 +188,6 @@ applications/hello_world/hello_world.elf: applications/hello_world/main.c
 		-Wl,-Map=applications/hello_world/hello_world.map \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
-
 applications/matmul/matmul.flash_load.elf: applications/matmul/main.c
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
 		$(CUSTOM_GCC_FLAGS) \
@@ -223,7 +222,7 @@ applications/fft/fft.flash_load.elf: applications/fft/main.c
 		-L $(RISCV)/riscv32-unknown-elf/lib \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
-applications/cgra_conv/cgra_conv.flash_load.elf: applications/cgra_conv/main.c
+applications/conv2d/conv2d.flash_load.elf: applications/conv2d/main.c
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
 		$(CUSTOM_GCC_FLAGS) \
 		-DHOST_BUILD \
@@ -234,10 +233,10 @@ applications/cgra_conv/cgra_conv.flash_load.elf: applications/cgra_conv/main.c
 		-static \
 		$(LIB_CRT_FLASH_LOAD) \
 		$^ $(LIB_RUNTIME) \
-		$ applications/cgra_conv/cgra_kernels_common.c \
+		$ applications/conv2d/cgra_kernels_common.c \
 		$(LIB_BASE) \
 		$(LIB_DRIVERS) \
-		-Wl,-Map=applications/cgra_conv/cgra_conv.spihost.map \
+		-Wl,-Map=applications/conv2d/conv2d.spihost.map \
 		-L $(RISCV)/riscv32-unknown-elf/lib \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
