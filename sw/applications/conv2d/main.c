@@ -21,10 +21,11 @@
 #include "heepocrates_ctrl.h"
 #include "cgra.h"
 
-#define RUN_CGRA
+// #define RUN_CGRA
 // #define POWER_MEASURE
 #define CHECK_RESULTS
 #define GPIO_TRIGGER
+
 
 #define CGRA_COL_INPUT_SIZE 4
 #define PIN_TRIGGER     4  //used for trigering and checking on oscilloscope
@@ -127,6 +128,7 @@ int main(int argc, char const *argv[])
     heepocrates_ctrl.base_addr = mmio_region_from_addr((uintptr_t)HEEPOCRATES_CTRL_START_ADDRESS);
     heepocrates_ctrl_cgra_disable(&heepocrates_ctrl, 0);
     
+
     cgra_intr_flag = 0;
 
 
@@ -168,6 +170,7 @@ int main(int argc, char const *argv[])
                 cgra_set_read_ptr ( &cgra, cgra_slot, (uint32_t) cgra_input[col_idx], col_idx );
             }
 
+            gpio_write(&gpio, PIN_TRIGGER, true);
             #ifdef POWER_MEASURE
             while(1){
             #endif
@@ -189,15 +192,18 @@ int main(int argc, char const *argv[])
             #ifdef POWER_MEASURE
             }
             #endif
+            gpio_write(&gpio, PIN_TRIGGER, false);
             // Toggle GPIO to measure power consumption}
         #else
-            #ifdef POWER_MEASURE
-            while(1){
+            gpio_write(&gpio, PIN_TRIGGER, true);
+            #ifdef POWER_MEASURE 
+            while(1){ 
             #endif
             cpuMatMul(A, B, R_out, A_ROWS, A_COLS, B_COLS);
             #ifdef POWER_MEASURE
             }
             #endif
+            gpio_write(&gpio, PIN_TRIGGER, false);
         #endif
 
 
