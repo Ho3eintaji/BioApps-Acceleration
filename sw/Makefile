@@ -206,7 +206,7 @@ applications/matmul/matmul.flash_load.elf: applications/matmul/main.c
 		-L $(RISCV)/riscv32-unknown-elf/lib \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
-applications/fft_cgra/fft_cgra.flash_load.elf: applications/fft_cgra/main.c
+applications/fft/fft.flash_load.elf: applications/fft/main.c
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
 		$(CUSTOM_GCC_FLAGS) \
 		-DHOST_BUILD \
@@ -219,11 +219,11 @@ applications/fft_cgra/fft_cgra.flash_load.elf: applications/fft_cgra/main.c
 		$^ $(LIB_RUNTIME) \
 		$(LIB_BASE) \
 		$(LIB_DRIVERS) \
-		-Wl,-Map=applications/fft_cgra/fft_cgra.spihost.map \
+		-Wl,-Map=applications/fft/fft.spihost.map \
 		-L $(RISCV)/riscv32-unknown-elf/lib \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 
-applications/cgra_fft/cgra_fft.flash_load.elf: applications/cgra_fft/main.c
+applications/fft_cpu/fft_cpu.flash_load.elf: applications/fft_cpu/main.c
 	$(RISCV_EXE_PREFIX)gcc -march=rv32imc -o $@ -w -Os -g -nostdlib \
 		$(CUSTOM_GCC_FLAGS) \
 		-DHOST_BUILD \
@@ -236,7 +236,7 @@ applications/cgra_fft/cgra_fft.flash_load.elf: applications/cgra_fft/main.c
 		$^ $(LIB_RUNTIME) \
 		$(LIB_BASE) \
 		$(LIB_DRIVERS) \
-		-Wl,-Map=applications/cgra_fft/cgra_fft.spihost.map \
+		-Wl,-Map=applications/fft_cpu/fft_cpu.spihost.map \
 		-L $(RISCV)/riscv32-unknown-elf/lib \
 		-lc -lm -lgcc -flto -ffunction-sections -fdata-sections -specs=nano.specs
 

@@ -1,40 +1,57 @@
-// Copyright 2023 EPFL
-// Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
-// SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "heepocrates.h"
 #include "core_v_mini_mcu.h"
-#include "power_manager.h"
+// #include "power_manager.h"
 #include "gpio.h"
 #include "soc_ctrl.h"
 #include "rv_timer.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "fll.h"
 #include "csr.h"
 #include "hart.h"
 #include "handler.h"
-#include "data.h"
-#include "cgra_bitstream.h"
+#include "heepocrates_ctrl.h"
 #include "rv_plic.h"
 #include "rv_plic_regs.h"
-#include "heepocrates_ctrl.h"
 #include "cgra.h"
 
-// #define RUN_CGRA
+#include "cgra_bitstream.h"
+#include "fxp.h"
+#include "defines.h"
+#include "fft_data.h"
+
+#define RUN_CGRA
 // #define POWER_MEASURE
 #define CHECK_RESULTS
 #define GPIO_TRIGGER
-
 
 #define CGRA_COL_INPUT_SIZE 4
 #define PIN_TRIGGER     4  //used for trigering and checking on oscilloscope
 
 
-
-
-// // Handler for the CGRA interruption
-// void handler_irq_cgra(uint32_t id);
+#ifdef CPLX_FFT
+  #if FFT_SIZE==512
+    #include "fft_factors_512_32b_int.h"
+  #endif
+  #if FFT_SIZE==1024
+    #include "fft_factors_1024_32b_int.h"
+  #endif
+  #if FFT_SIZE==2048
+    #include "fft_factors_2048_32b_int.h"
+  #endif
+#endif // CPLX_FFT
+#ifdef REAL_FFT
+  #if FFT_SIZE==512
+    #include "fft_factors_256_32b_int.h"
+  #endif
+  #if FFT_SIZE==1024
+    #include "fft_factors_512_32b_int.h"
+  #endif
+  #if FFT_SIZE==2048
+    #include "fft_factors_1024_32b_int.h"
+  #endif
+#endif // REAL_FFT
 
 // Gpio
 void gpio_output_cfg(gpio_t *gpio, uint32_t pin);
@@ -44,14 +61,9 @@ gpio_t gpio;
 const uint64_t SYS_FREQ = 80*1000000; //MHz
 void fll_cfg(uint64_t freq);
 
-// one dim slot x n input values (data ptrs, constants, ...)
-// int32_t cgra_input[CGRA_N_SLOTS][10] __attribute__ ((aligned (4)));
-static int32_t cgra_input[CGRA_N_COLS][CGRA_COL_INPUT_SIZE]    __attribute__ ((aligned (4)));
-// int8_t cgra_intr_flag;
-volatile bool               cgra_intr_flag;
-// volatile int32_t cgra_res[OUTPUT_LENGTH] = {0};
-// int32_t exp_res[OUTPUT_LENGTH] = {0};
-// CGRA variables
+// one dim per core x n input values (data ptrs, constants, ...)
+int32_t cgra_input[CGRA_N_COLS][CGRA_N_SLOTS][10] __attribute__ ((aligned (4))) = { 0 };
+int8_t cgra_intr_flag;
 static cgra_t               cgra;
 static uint8_t              cgra_slot;
 
@@ -67,162 +79,413 @@ void handler_irq_external(void) {
     // Claim/clear interrupt
     plic_res = dif_plic_irq_claim(&rv_plic, 0, &intr_num);
     if (plic_res == kDifPlicOk && intr_num == CGRA_INTR) {
-      cgra_intr_flag = 1;
+        cgra_intr_flag = 1;
+    }
+
+    // Complete the interrupt
+    plic_res = dif_plic_irq_complete(&rv_plic, 0, &intr_num);
+    if (plic_res != kDifPlicOk || intr_num != CGRA_INTR) {
+        PRINTF("CGRA interrupt complete failed\n");
     }
 }
 
-
-int32_t R_out[R_ROWS*R_COLS]; 
-
-
-
-void __attribute__((noinline, aligned(4))) cpuMatMul(data_t *A, data_t *B, data_t *R_cpu, unsigned int a_rows, unsigned int a_cols, unsigned int b_cols);
+uint16_t ReverseBits (uint16_t index, uint16_t numBits);
+uint16_t NumberOfBitsNeeded (uint16_t powerOfTwo);
+void cpu_fft_radix2(fxp *real, fxp *imag, int n);
 
 
+// FFT radix-2 variables
+fxp RealOut_fft0_fxp[FFT_SIZE] __attribute__ ((aligned (4))) __attribute__((section(".xheep_data_interleaved"))) = { 0 };
+fxp ImagOut_fft0_fxp[FFT_SIZE] __attribute__ ((aligned (4))) __attribute__((section(".xheep_data_interleaved"))) = { 0 };
 
-int main(int argc, char const *argv[])
-{
+#ifdef CGRA_100_PERCENT
+  fxp RealOut_fft1_fxp[FFT_SIZE] __attribute__ ((aligned (4))) __attribute__((section(".xheep_data_interleaved"))) = { 0 };
+  fxp ImagOut_fft1_fxp[FFT_SIZE] __attribute__ ((aligned (4))) __attribute__((section(".xheep_data_interleaved"))) = { 0 };
+#endif
 
-    // Set app frequency
-    fll_cfg(SYS_FREQ);
-    gpio_output_cfg(&gpio, PIN_TRIGGER); // GPIO configuration for toggling
-    gpio_write(&gpio, PIN_TRIGGER, false);
+fxp RealOut_fxp_exp[FFT_SIZE] __attribute__ ((aligned (4))) __attribute__((section(".xheep_data_interleaved"))) = { 0 };
+fxp ImagOut_fxp_exp[FFT_SIZE] __attribute__ ((aligned (4))) __attribute__((section(".xheep_data_interleaved"))) = { 0 };
+
+#ifdef REAL_FFT
+  fxp re_tmp[FFT_SIZE/2+1] __attribute__ ((aligned (4))) __attribute__((section(".xheep_data_interleaved"))) = { 0 };
+  fxp im_tmp[FFT_SIZE/2+1] __attribute__ ((aligned (4))) __attribute__((section(".xheep_data_interleaved"))) = { 0 };
+#endif // REAL_FFT
 
 
 
-    unsigned int a_rows = A_ROWS;
-    unsigned int a_cols = A_COLS;
-    unsigned int b_cols = B_COLS;
 
-    // Init the PLIC
-    rv_plic_params.base_addr = mmio_region_from_addr((uintptr_t)PLIC_START_ADDRESS);
-    plic_res = dif_plic_init(rv_plic_params, &rv_plic);
+/* --------------------------------------------------------------------------
+ *                     main
+ * --------------------------------------------------------------------------*/
+int main(void) {
 
-    if (plic_res != kDifPlicOk) {
-        printf("PLIC init failed\n;");
-        return EXIT_FAILURE;
-    }
+  // Set app frequency
+  fll_cfg(SYS_FREQ);
+  gpio_output_cfg(&gpio, PIN_TRIGGER); // GPIO configuration for toggling
+  gpio_write(&gpio, PIN_TRIGGER, false);
 
-    // Set CGRA priority to 1 (target threshold is by default 0) to trigger an interrupt to the target (the processor)
-    plic_res = dif_plic_irq_set_priority(&rv_plic, CGRA_INTR, 1);
-    if (plic_res != kDifPlicOk) {
-        printf("Set CGRA interrupt priority to 1 failed\n;");
-        return EXIT_FAILURE;
-    }
+  PRINTF("Init CGRA context memory...\n");
+  cgra_cmem_init(cgra_imem_bitstream, cgra_kmem_bitstream);
 
-    plic_res = dif_plic_irq_set_enabled(&rv_plic, CGRA_INTR, 0, kDifPlicToggleEnabled);
-    if (plic_res != kDifPlicOk) {
-        printf("Enable CGRA interrupt failed\n;");
-        return EXIT_FAILURE;
-    }
 
-    // Enable interrupt on processor side
-    // Enable global interrupt for machine-level interrupts
-    CSR_SET_BITS(CSR_REG_MSTATUS, 0x8);
-    // Set mie.MEIE bit to one to enable machine-level external interrupts
-    const uint32_t mask = 1 << 11;//IRQ_EXT_ENABLE_OFFSET;
-    CSR_SET_BITS(CSR_REG_MIE, mask);
-    cgra_intr_flag = 0;
+  // Init the PLIC
+  rv_plic_params.base_addr = mmio_region_from_addr((uintptr_t)PLIC_START_ADDRESS);
+  plic_res = dif_plic_init(rv_plic_params, &rv_plic);
 
-    heepocrates_ctrl_t heepocrates_ctrl;
-    heepocrates_ctrl.base_addr = mmio_region_from_addr((uintptr_t)HEEPOCRATES_CTRL_START_ADDRESS);
-    heepocrates_ctrl_cgra_disable(&heepocrates_ctrl, 0);
+  if (plic_res != kDifPlicOk) {
+      printf("PLIC init failed\n;");
+      return EXIT_FAILURE;
+  }
+
+  // Set CGRA priority to 1 (target threshold is by default 0) to trigger an interrupt to the target (the processor)
+  plic_res = dif_plic_irq_set_priority(&rv_plic, CGRA_INTR, 1);
+  if (plic_res != kDifPlicOk) {
+      printf("Set CGRA interrupt priority to 1 failed\n;");
+      return EXIT_FAILURE;
+  }
+
+  plic_res = dif_plic_irq_set_enabled(&rv_plic, CGRA_INTR, 0, kDifPlicToggleEnabled);
+  if (plic_res != kDifPlicOk) {
+      printf("Enable CGRA interrupt failed\n;");
+      return EXIT_FAILURE;
+  }
+
+  // Enable interrupt on processor side
+  // Enable global interrupt for machine-level interrupts
+  CSR_SET_BITS(CSR_REG_MSTATUS, 0x8);
+  // Set mie.MEIE bit to one to enable machine-level external interrupts
+  const uint32_t mask = 1 << 11;//IRQ_EXT_ENABLE_OFFSET;
+  CSR_SET_BITS(CSR_REG_MIE, mask);
+  cgra_intr_flag = 0;
+
+  heepocrates_ctrl_t heepocrates_ctrl;
+  heepocrates_ctrl.base_addr = mmio_region_from_addr((uintptr_t)HEEPOCRATES_CTRL_START_ADDRESS);
+  heepocrates_ctrl_cgra_disable(&heepocrates_ctrl, 0);
+
+  cgra_intr_flag = 0;
+
+  cgra.base_addr = mmio_region_from_addr((uintptr_t)CGRA_PERIPH_START_ADDRESS);
+
+  while(1){
+
+  //////////////////////////////////////////////////////////
+  //
+  // COMPLEX FFT radix-2 (Butterfy) implementation
+  //
+  //////////////////////////////////////////////////////////
+#ifdef CPLX_FFT
+
+  PRINTF("Run CGRA FFT on %d points...\n", FFT_SIZE);
+
+  cgra_perf_cnt_enable(&cgra, 1);
+  uint16_t numBits = NumberOfBitsNeeded ( FFT_SIZE );
+  int8_t column_idx;
+
+
+
+  // STEP 1: bit reverse
+  // PRINTF("Run input bit reverse reordering on %d points on CGRA...\n", FFT_SIZE);
+
+  // Select request slot of CGRA (2 slots)
+  // uint32_t cgra_slot = cgra_get_slot(&cgra);
+  cgra_slot = cgra_get_slot(&cgra);
+  column_idx = 0;
+  cgra_set_read_ptr(&cgra, cgra_slot, (uint32_t) cgra_input[column_idx][cgra_slot], column_idx);
+
+  // input data ptr column 0
+  cgra_input[column_idx][cgra_slot][0] = (int32_t)&input_signal[1]; // imaginary part is given second
+  cgra_input[column_idx][cgra_slot][1] = (int32_t)&input_signal[0]; // imaginary part is given first
+  cgra_input[column_idx][cgra_slot][2] = (int32_t)FFT_SIZE/2; // idx end
+  cgra_input[column_idx][cgra_slot][3] = (int32_t)numBits;
+  cgra_input[column_idx][cgra_slot][4] = (int32_t)&ImagOut_fft0_fxp[0];
+  cgra_input[column_idx][cgra_slot][5] = (int32_t)&RealOut_fft0_fxp[0];
+  cgra_input[column_idx][cgra_slot][6] = 0; // idx start
+
+
+    // break;
     
+  // Launch CGRA kernel
+  cgra_set_kernel(&cgra, cgra_slot, CGRA_FTT_BITREV_ID);
 
-    cgra_intr_flag = 0;
+        // break;
+
+  cgra_slot = cgra_get_slot(&cgra);
+  column_idx = 0;
+  cgra_set_read_ptr(&cgra, cgra_slot, (uint32_t) cgra_input[column_idx][cgra_slot], column_idx);
+
+  // input data ptr column 0
+  cgra_input[column_idx][cgra_slot][0] = (int32_t)&input_signal[FFT_SIZE/2+1]; // imaginary part is given second
+  cgra_input[column_idx][cgra_slot][1] = (int32_t)&input_signal[FFT_SIZE/2]; // imaginary part is given first
+  cgra_input[column_idx][cgra_slot][2] = (int32_t)FFT_SIZE; // idx end
+  cgra_input[column_idx][cgra_slot][3] = (int32_t)numBits;
+  cgra_input[column_idx][cgra_slot][4] = (int32_t)&ImagOut_fft0_fxp[0];
+  cgra_input[column_idx][cgra_slot][5] = (int32_t)&RealOut_fft0_fxp[0];
+  cgra_input[column_idx][cgra_slot][6] = FFT_SIZE/2; // idx start
+
+  // Launch CGRA kernel
+  cgra_set_kernel(&cgra, cgra_slot, CGRA_FTT_BITREV_ID);
+
+  // uint32_t t_bitrev_launch = timer_get_cycles() - t1;
+  
+
+#ifdef CGRA_100_PERCENT
+  cgra_slot = cgra_get_slot(&cgra);
+  column_idx = 0;
+  cgra_set_read_ptr(&cgra, cgra_slot, (uint32_t) cgra_input[column_idx][cgra_slot], column_idx);
+
+  // input data ptr column 0
+  cgra_input[column_idx][cgra_slot][0] = (int32_t)&input_signal[1]; // imaginary part is given second
+  cgra_input[column_idx][cgra_slot][1] = (int32_t)&input_signal[0]; // imaginary part is given first
+  cgra_input[column_idx][cgra_slot][2] = (int32_t)FFT_SIZE/2; // idx end
+  cgra_input[column_idx][cgra_slot][3] = (int32_t)numBits;
+  cgra_input[column_idx][cgra_slot][4] = (int32_t)&ImagOut_fft1_fxp[0];
+  cgra_input[column_idx][cgra_slot][5] = (int32_t)&RealOut_fft1_fxp[0];
+  cgra_input[column_idx][cgra_slot][6] = 0; // idx start
+
+  // Launch CGRA kernel
+  cgra_set_kernel(&cgra, cgra_slot, CGRA_FTT_BITREV_ID);
+
+  cgra_slot = cgra_get_slot(&cgra);
+  column_idx = 0;
+  cgra_set_read_ptr(&cgra, cgra_slot, (uint32_t) cgra_input[column_idx][cgra_slot], column_idx);
+
+  // input data ptr column 0
+  cgra_input[column_idx][cgra_slot][0] = (int32_t)&input_signal[FFT_SIZE/2+1]; // imaginary part is given second
+  cgra_input[column_idx][cgra_slot][1] = (int32_t)&input_signal[FFT_SIZE/2]; // imaginary part is given first
+  cgra_input[column_idx][cgra_slot][2] = (int32_t)FFT_SIZE; // idx end
+  cgra_input[column_idx][cgra_slot][3] = (int32_t)numBits;
+  cgra_input[column_idx][cgra_slot][4] = (int32_t)&ImagOut_fft1_fxp[0];
+  cgra_input[column_idx][cgra_slot][5] = (int32_t)&RealOut_fft1_fxp[0];
+  cgra_input[column_idx][cgra_slot][6] = FFT_SIZE/2; // idx start
+
+  // Launch CGRA kernel
+  cgra_set_kernel(&cgra, cgra_slot, CGRA_FTT_BITREV_ID);
+#endif // CGRA_100_PERCENT
+
+// t1 = timer_get_cycles();
+
+  // Wait CGRA is done
+  cgra_intr_flag=0;
+  while(cgra_intr_flag==0) {
+    wait_for_interrupt();
+  }
+  // uint32_t t_bitrev_exe = timer_get_cycles() - t1;
+
+  // Step 2: complex-valued FFT computation
+  // PRINTF("Run a complex FFT of %d points on CGRA...\n", FFT_SIZE);
+
+  // t1 = timer_get_cycles();
+
+  cgra_slot = cgra_get_slot(&cgra);
+  column_idx = 0;
+  cgra_set_read_ptr(&cgra, cgra_slot, (uint32_t) cgra_input[column_idx][cgra_slot], column_idx);
+
+  // input data ptr column 0
+  cgra_input[column_idx][cgra_slot][0] = (int32_t)&RealOut_fft0_fxp[0];
+  cgra_input[column_idx][cgra_slot][1] = (int32_t)&f_real[0];
+  cgra_input[column_idx][cgra_slot][2] = (int32_t)FFT_SIZE;
+
+  column_idx = 1;
+  cgra_set_read_ptr(&cgra, cgra_slot, (uint32_t) cgra_input[column_idx][cgra_slot], column_idx);
+
+  // input data ptr column 0
+  cgra_input[column_idx][cgra_slot][0] = (int32_t)&f_imag[0];
+  cgra_input[column_idx][cgra_slot][1] = (int32_t)&ImagOut_fft0_fxp[0];
+  cgra_input[column_idx][cgra_slot][2] = (int32_t)numBits;
+
+  // Launch CGRA kernel
+  #ifdef CGRA_FFT_FOREVER
+    cgra_set_kernel(&cgra, cgra_slot, CGRA_FTT_CPLX_FOREVER_ID);
+  #else
+    cgra_set_kernel(&cgra, cgra_slot, CGRA_FTT_CPLX_ID);
+  #endif
+
+  // uint32_t t_fft_launch = timer_get_cycles() - t1;
+
+#ifdef CGRA_100_PERCENT
+  cgra_slot = cgra_get_slot(&cgra);
+  column_idx = 0;
+  cgra_set_read_ptr(&cgra, cgra_slot, (uint32_t) cgra_input[column_idx][cgra_slot], column_idx);
+
+  // input data ptr column 0
+  cgra_input[column_idx][cgra_slot][0] = (int32_t)&RealOut_fft1_fxp[0];
+  cgra_input[column_idx][cgra_slot][1] = (int32_t)&f_real[0];
+  cgra_input[column_idx][cgra_slot][2] = (int32_t)FFT_SIZE;
+
+  column_idx = 1;
+  cgra_set_read_ptr(&cgra, cgra_slot, (uint32_t) cgra_input[column_idx][cgra_slot], column_idx);
+
+  // input data ptr column 0
+  cgra_input[column_idx][cgra_slot][0] = (int32_t)&f_imag[0];
+  cgra_input[column_idx][cgra_slot][1] = (int32_t)&ImagOut_fft1_fxp[0];
+  cgra_input[column_idx][cgra_slot][2] = (int32_t)numBits;
+
+  // Launch CGRA kernel
+  #ifdef CGRA_FFT_FOREVER
+    cgra_set_kernel(&cgra, cgra_slot, CGRA_FTT_CPLX_FOREVER_ID);
+  #else
+    cgra_set_kernel(&cgra, cgra_slot, CGRA_FTT_CPLX_ID);
+  #endif
+#endif // CGRA_100_PERCENT
+
+// t1 = timer_get_cycles();
+
+  // Wait CGRA is done
+  cgra_intr_flag=0;
+  while(cgra_intr_flag==0) {
+    wait_for_interrupt();
+  }
+  // uint32_t t_fft_exe = timer_get_cycles() - t1;
+
+  // // Complete the interrupt
+  // plic_res = dif_plic_irq_complete(&rv_plic, 0, &intr_num);
+  // if (plic_res != kDifPlicOk || intr_num != CGRA_INTR) {
+  //   printf("CGRA interrupt complete failed\n");
+  //   return EXIT_FAILURE;
+  // }
+#endif // CPLX_FFT
+
+// uint32_t t_fft_total = timer_get_cycles() - t1_total;
+
+// #ifdef PRINT_TIME
+//   PRINTF("Time to init bitsream: %d\n", t_cgra_init);
+//   PRINTF("====================================\n");
+//   PRINTF("Time to run complex FFT on CGRA: %d\n", t_fft_total);
+//   PRINTF("  - bit reverse launch: %d\n", t_bitrev_launch);
+//   PRINTF("  - bit reverse execution: %d\n", t_bitrev_exe);
+//   PRINTF("  - FFT launch: %d\n", t_fft_launch);
+//   PRINTF("  - FFT execution: %d\n", t_fft_exe);
+//   PRINTF("====================================\n");
+// #endif // PRINT_TIME
 
 
 
-    while(1) {
-
-        #ifdef RUN_CGRA
-
-            // CGRA
-            // cgra_cmem_init(cgra_imem_bistream, cgra_kem_bitstream);
-            cgra_cmem_init(cgra_imem_bitstream, cgra_kmem_bitstream);
-            // cgra.base_addr = mmio_region_from_addr((uintptr_t)OECGRA_CONFIG_REGS_START_ADDRESS);
-            cgra.base_addr = mmio_region_from_addr((uintptr_t)CGRA_PERIPH_START_ADDRESS);
-            cgra_slot = cgra_get_slot(&cgra);
-
-            // Col 0: &B[0][0], nItLoopColsC, &A[0][0], &C[0][3]
-            cgra_input[0][0] = &B[0];
-            cgra_input[0][1] = R_COLS/CGRA_N_ROWS;
-            cgra_input[0][2] = &A[0];
-            cgra_input[0][3] = &R_out[3];
-            // Col 1: &C[1][0], &B[0][1], nItLoopsColsA, &A[1][0]
-            cgra_input[1][0] = &R_out[R_COLS];
-            cgra_input[1][1] = &B[1];
-            cgra_input[1][2] = A_COLS;
-            cgra_input[1][3] = &A[A_COLS];
-            // Col 2: &A[2][0], &C[2][1], &B[0][2], nItLoopColsC
-            cgra_input[2][0] = &A[2*A_COLS];
-            cgra_input[2][1] = &R_out[2*R_COLS+1];
-            cgra_input[2][2] = &B[2];
-            cgra_input[2][3] = R_COLS/CGRA_N_ROWS;
-            // Col 3: nItLoopRowsC, &A[3][0], &C[3][2], &B[0][3], 
-            cgra_input[3][0] = R_ROWS/CGRA_N_COLS;
-            cgra_input[3][1] = &A[3*A_COLS];
-            cgra_input[3][2] = &R_out[3*R_COLS+2];
-            cgra_input[3][3] = &B[3];
-
-            // Set CGRA kernel L/S pointers
-            for(int col_idx = 0 ; col_idx < CGRA_N_COLS ; col_idx++){
-                cgra_set_read_ptr ( &cgra, cgra_slot, (uint32_t) cgra_input[col_idx], col_idx );
-            }
-
-            gpio_write(&gpio, PIN_TRIGGER, true);
-            #ifdef POWER_MEASURE
-            while(1){
-            #endif
-
-            // Launch CGRA kernel
-            cgra_set_kernel( &cgra, cgra_slot, TRANSFORMER );
-
-            // Wait CGRA is done
-            cgra_intr_flag=0;
-            while(cgra_intr_flag==0) {
-                wait_for_interrupt();
-            }
-            // Complete the interrupt
-            plic_res = dif_plic_irq_complete(&rv_plic, 0, &intr_num);
-            if (plic_res != kDifPlicOk || intr_num != CGRA_INTR) {
-                printf("CGRA interrupt complete failed\n");
-                return EXIT_FAILURE;
-            }
-            #ifdef POWER_MEASURE
-            }
-            #endif
-            gpio_write(&gpio, PIN_TRIGGER, false);
-            // Toggle GPIO to measure power consumption}
-        #else
-            gpio_write(&gpio, PIN_TRIGGER, true);
-            #ifdef POWER_MEASURE 
-            while(1){ 
-            #endif
-            cpuMatMul(A, B, R_out, A_ROWS, A_COLS, B_COLS);
-            #ifdef POWER_MEASURE
-            }
-            #endif
-            gpio_write(&gpio, PIN_TRIGGER, false);
-        #endif
 
 
-        #ifdef CHECK_RESULTS
-            // check carus, oe-cgra, and cput results to be the same as the golden result
-            for (unsigned int i = 0; i < R_ROWS; i++) {
-                for (unsigned int j = 0; j < R_COLS; j++) {
-                    if (R_out[i*R_COLS+j] != R[i*R_COLS+j]) {
-                        printf("CGRA|gold R[%u,%u]: %x %x\n", i, j, R_out[i*R_COLS+j], R[i*R_COLS+j]);
-                        // return -1;
-                    }
-                }
-            }
-            printf("Results are correct!\n");
-        #endif
+#ifdef REAL_FFT
+  printf("REAL FFT KERNEL DEPRECATED FOR CURRENT CGRA ARCHITECTURE")
+#endif // REAL_FFT
 
-    }
-      
-    return 0;
+
+
+#ifdef CHECK_ERRORS
+
+  int32_t errors=0;
+  for (int i=0; i<FFT_SIZE; i++) {
+    if(RealOut_fft0_fxp[i] != exp_output_real[i] ||
+        ImagOut_fft0_fxp[i] != exp_output_imag[i]) {
+          printf("Real[%d] (CGRA/expected) %08x != %08x)\n", i, RealOut_fft0_fxp[i], exp_output_real[i]);
+          printf("Imag[%d] (CGRA/expected) %08x != %08x)\n", i, ImagOut_fft0_fxp[i], exp_output_imag[i]);
+        errors++;
+      }
+  }
+
+#ifdef CGRA_100_PERCENT
+  for (int i=0; i<FFT_SIZE; i++) {
+    if(RealOut_fft1_fxp[i] != exp_output_real[i] ||
+        ImagOut_fft1_fxp[i] != exp_output_imag[i]) {
+          printf("Real[%d] (out/expected) %08x != %08x)\n", i, RealOut_fft1_fxp[i], exp_output_real[i]);
+          printf("Imag[%d] (out/expected) %08x != %08x)\n", i, ImagOut_fft1_fxp[i], exp_output_imag[i]);
+        errors++;
+      }
+  }
+#endif
+
+  printf("CGRA FFT computation finished with %d errors\n", errors);
+#endif // CHECK_ERRORS
+
+}
+
+  return EXIT_SUCCESS;
+}
+
+uint16_t ReverseBits (uint16_t index, uint16_t numBits)
+{
+  uint16_t i, rev;
+
+  for (i=rev=0; i<numBits; i++) {
+    rev = (rev << 1) | (index & 1);
+    index >>= 1;
+  }
+
+  return rev;
+}
+
+uint16_t NumberOfBitsNeeded (uint16_t powerOfTwo)
+{
+  uint16_t i;
+
+  if (powerOfTwo < 2) {
+   return 0; // should not happen
+  }
+
+  for (i=0;; i++) {
+    if (powerOfTwo & (1 << i))
+      return i;
+  }
+}
+
+
+// --- CPU FFT Implementation ---
+void cpu_fft_radix2(fxp *real, fxp *imag, int n) {
+  if (n < 2) {
+      // Base case: nothing to do for n = 1
+      return;
+  }
+
+  int numBits = NumberOfBitsNeeded(n);
+
+  // Bit-reversal permutation
+  for (int i = 0; i < n; i++) {
+      int j = ReverseBits(i, numBits);
+      if (j > i) {
+          // Swap real and imaginary parts
+          fxp temp_real = real[i];
+          fxp temp_imag = imag[i];
+          real[i] = real[j];
+          imag[i] = imag[j];
+          real[j] = temp_real;
+          imag[j] = temp_imag;
+      }
+  }
+
+  // Cooley-Tukey algorithm
+  for (int s = 1; s <= numBits; s++) {
+      int m = 1 << s;       // Butterfly size (2, 4, 8, ..., n)
+      int half_m = m >> 1;  // m/2
+
+      for (int k = 0; k < n; k += m) {
+          for (int j = 0; j < half_m; j++) {
+              // Calculate twiddle factor index (using lookup table)
+              int twiddle_index = j * (FFT_SIZE / m);
+
+              fxp w_real, w_imag;
+
+              //important part for handling 512, 1024, ... FFT sizes
+              if (twiddle_index < FFT_SIZE / 2) {
+                  w_real = f_real[twiddle_index];
+                  w_imag = f_imag[twiddle_index];
+              }
+              else
+              {
+                  w_real = f_real[twiddle_index - FFT_SIZE / 2];
+                  w_imag = -f_imag[twiddle_index - FFT_SIZE / 2];
+              }
+
+              // Butterfly operation
+              fxp t_real = fxp_mult(w_real, real[k + j + half_m]) - fxp_mult(w_imag, imag[k + j + half_m]);
+              fxp t_imag = fxp_mult(w_real, imag[k + j + half_m]) + fxp_mult(w_imag, real[k + j + half_m]);
+
+              fxp u_real = real[k + j];
+              fxp u_imag = imag[k + j];
+
+              real[k + j] = u_real + t_real;
+              imag[k + j] = u_imag + t_imag;
+              real[k + j + half_m] = u_real - t_real;
+              imag[k + j + half_m] = u_imag - t_imag;
+          }
+      }
+  }
 }
 
 void fll_cfg(uint64_t freq) {
@@ -250,16 +513,4 @@ void gpio_output_cfg(gpio_t *gpio, uint32_t pin) {
     gpio_init(gpio_params, gpio);
     gpio_output_set_enabled(gpio, pin, true);
     gpio_write(gpio, pin, false);
-}
-
-void cpuMatMul(data_t *A, data_t *B, data_t *R_cpu, unsigned int a_rows, unsigned int a_cols, unsigned int b_cols)
-{
-    for (unsigned int i = 0; i < a_rows; i++) {
-        for (unsigned int j = 0; j < b_cols; j++) {
-            R_cpu[i*b_cols+j] = 0;
-            for (unsigned int k = 0; k < a_cols; k++) {
-                R_cpu[i*b_cols+j] += A[i*a_cols+k] * B[k*b_cols+j];
-            }
-        }
-    }
 }

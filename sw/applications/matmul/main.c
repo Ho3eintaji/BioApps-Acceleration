@@ -68,6 +68,12 @@ void handler_irq_external(void) {
     if (plic_res == kDifPlicOk && intr_num == CGRA_INTR) {
       cgra_intr_flag = 1;
     }
+
+    // Complete the interrupt
+    plic_res = dif_plic_irq_complete(&rv_plic, 0, &intr_num);
+    if (plic_res != kDifPlicOk || intr_num != CGRA_INTR) {
+        printf("CGRA interrupt complete failed\n");
+    }
 }
 
 
@@ -180,12 +186,12 @@ int main(int argc, char const *argv[])
             while(cgra_intr_flag==0) {
                 wait_for_interrupt();
             }
-            // Complete the interrupt
-            plic_res = dif_plic_irq_complete(&rv_plic, 0, &intr_num);
-            if (plic_res != kDifPlicOk || intr_num != CGRA_INTR) {
-                printf("CGRA interrupt complete failed\n");
-                return EXIT_FAILURE;
-            }
+            // // Complete the interrupt
+            // plic_res = dif_plic_irq_complete(&rv_plic, 0, &intr_num);
+            // if (plic_res != kDifPlicOk || intr_num != CGRA_INTR) {
+            //     printf("CGRA interrupt complete failed\n");
+            //     return EXIT_FAILURE;
+            // }
             #ifdef POWER_MEASURE
             }
             #endif
