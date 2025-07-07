@@ -7,6 +7,7 @@
  * --------------------------------------------------------------------------*/
 
 #define FFT_SIZE (512)
+#define NUM_BITS ((int)ceil(log2(FFT_SIZE)))
 
 // Choose complex or real values FFT
 #define CPLX_FFT
@@ -18,7 +19,7 @@
 // #define CGRA_FFT_FOREVER
 
 // Check for error and print results
-#define CHECK_ERRORS
+// #define CHECK_ERRORS
 
 // Define this to print more information
 #define DEBUG
