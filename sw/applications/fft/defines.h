@@ -6,7 +6,7 @@
  *                     Application defines
  * --------------------------------------------------------------------------*/
 
-#define FFT_SIZE (512)
+#define FFT_SIZE (1024)
 #define NUM_BITS ((int)ceil(log2(FFT_SIZE)))
 
 // Choose complex or real values FFT
@@ -14,7 +14,7 @@
 // #define REAL_FFT --> DEPRECATED (KERNEL NEEDS TO BE ADAPTED TO CURRENT CGRA)
 
 // Define this to use completely the CGRA (2 FFTS running in parallel)
-// #define CGRA_100_PERCENT
+#define CGRA_100_PERCENT
 // Define this to run the FFT kernel forever for power measurement
 // #define CGRA_FFT_FOREVER
 

@@ -28,7 +28,7 @@
 #define GPIO_TRIGGER
 
 #define CGRA_COL_INPUT_SIZE 4
-#define PIN_TRIGGER     4  //used for trigering and checking on oscilloscope
+#define PIN_TRIGGER     0  //used for trigering and checking on oscilloscope
 
 
 #ifdef CPLX_FFT
@@ -59,7 +59,7 @@ void gpio_output_cfg(gpio_t *gpio, uint32_t pin);
 gpio_t gpio;
 
 
-const uint64_t SYS_FREQ = 80*1000000; //MHz
+const uint64_t SYS_FREQ = 100*1000000; //MHz
 void fll_cfg(uint64_t freq);
 
 // one dim per core x n input values (data ptrs, constants, ...)
@@ -185,7 +185,7 @@ int main(void) {
 
 #ifdef RUN_CGRA
 
-  PRINTF("Run CGRA FFT on %d points...\n", FFT_SIZE);
+  // PRINTF("Run CGRA FFT on %d points...\n", FFT_SIZE);
 
   cgra_perf_cnt_enable(&cgra, 1);
   uint16_t numBits = NumberOfBitsNeeded ( FFT_SIZE );
@@ -194,7 +194,7 @@ int main(void) {
 
 
   // STEP 1: bit reverse
-  PRINTF("Run input bit reverse reordering on %d points on CGRA...\n", FFT_SIZE);
+  // PRINTF("Run input bit reverse reordering on %d points on CGRA...\n", FFT_SIZE);
 
   // Select request slot of CGRA (2 slots)
   cgra_slot = cgra_get_slot(&cgra);
@@ -272,7 +272,7 @@ int main(void) {
   }
 
   // Step 2: complex-valued FFT computation
-  PRINTF("Run a complex FFT of %d points on CGRA...\n", FFT_SIZE);
+  // PRINTF("Run a complex FFT of %d points on CGRA...\n", FFT_SIZE);
 
   cgra_slot = cgra_get_slot(&cgra);
   column_idx = 0;
@@ -291,13 +291,16 @@ int main(void) {
   cgra_input[column_idx][cgra_slot][1] = (int32_t)&ImagOut_fft0_fxp[0];
   cgra_input[column_idx][cgra_slot][2] = (int32_t)numBits;
 
-    gpio_write(&gpio, PIN_TRIGGER, true); // Trigger GPIO
 
-  #ifdef POWER_MEASURE
+
+
+
+  // Launch CGRA kernel
+
+    #ifdef POWER_MEASURE
     while(1){
   #endif //POWER_MEASURE
 
-  // Launch CGRA kernel
 
   #ifdef CGRA_FFT_FOREVER
     cgra_set_kernel(&cgra, cgra_slot, CGRA_FTT_CPLX_FOREVER_ID);
@@ -325,6 +328,7 @@ int main(void) {
   cgra_input[column_idx][cgra_slot][1] = (int32_t)&ImagOut_fft1_fxp[0];
   cgra_input[column_idx][cgra_slot][2] = (int32_t)numBits;
 
+
   // Launch CGRA kernel
   #ifdef CGRA_FFT_FOREVER
     cgra_set_kernel(&cgra, cgra_slot, CGRA_FTT_CPLX_FOREVER_ID);
@@ -334,6 +338,8 @@ int main(void) {
 #endif // CGRA_100_PERCENT
 
 
+    gpio_write(&gpio, PIN_TRIGGER, true); // Trigger GPIO
+    
   // Wait CGRA is done
   cgra_intr_flag=0;
   while(cgra_intr_flag==0) {
@@ -346,12 +352,14 @@ int main(void) {
   #endif // POWER_MEASURE
 
     gpio_write(&gpio, PIN_TRIGGER, false); // Trigger GPIO
+    // a simple delay
+    for (int i = 0; i < 100000; i++);
 
   
 
 #else // RUN_CGRA
 
-  PRINTF("Run CPU FFT on %d points...\n", FFT_SIZE);
+  // PRINTF("Run CPU FFT on %d points...\n", FFT_SIZE);
 
   gpio_write(&gpio, PIN_TRIGGER, true); // Trigger GPIO
 
@@ -370,7 +378,10 @@ int main(void) {
 
 #endif // RUN_CGRA
 
-printf("FFT computation finished\n");
+// printf("FFT computation finished\n");
+
+// a simple delay
+for (int i = 0; i < 100000; i++);
 
 #endif // CPLX_FFT
 
